@@ -48,10 +48,9 @@ internal.roomModeDisplayValues = {
     disabled = "Disabled",
     forced = "Forced",
 }
-internal.hubRewardReplacementOptions = { "", "__none__" }
+internal.hubRewardReplacementOptions = { "" }
 internal.hubRewardReplacementDisplayValues = {
     [""] = "Hermes (Default)",
-    ["__none__"] = "None",
 }
 
 internal.biomeTabs = {

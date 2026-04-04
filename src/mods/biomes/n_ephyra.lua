@@ -138,31 +138,42 @@ internal.registerPatchBuilder(function(plan, read, log)
         return
     end
 
-    plan:transform(LootData, "HubRewards", function(list)
-        local newList = {}
-        for _, entry in ipairs(list or {}) do
-            if entry.Name == "HermesUpgrade" then
-                if replacement ~= "__none__" then
-                    local copy = {}
-                    for key, value in pairs(entry) do
-                        copy[key] = value
-                    end
-                    copy.Name = replacement
-                    copy.GameStateRequirements = nil
-                    table.insert(newList, copy)
-                end
-            else
-                table.insert(newList, entry)
-            end
+    local hermesHubReward = nil
+    for _, entry in ipairs(LootData.HubRewards or {}) do
+        if entry.Name == "HermesUpgrade" then
+            hermesHubReward = entry
+            break
         end
-        return newList
-    end)
-
-    if replacement == "__none__" then
-        log("Removed Hermes from Ephyra HubRewards")
-    else
-        log("Replaced Hermes in Ephyra HubRewards with %s", replacement)
     end
+
+    if hermesHubReward == nil then
+        return
+    end
+
+    local copy = {}
+    for key, value in pairs(hermesHubReward) do
+        copy[key] = value
+    end
+    copy.Name = replacement
+    copy.GameStateRequirements = nil
+    plan:setElement(LootData, "HubRewards", hermesHubReward, copy)
+
+    log("Replaced Hermes in Ephyra HubRewards with %s", replacement)
+end)
+
+internal.registerPatchBuilder(function(plan, read, log)
+    local replacement = read("ReplaceHermesInEphyra") or ""
+    if replacement == "" or replacement == "HermesUpgrade" then
+        return
+    end
+
+    if EncounterData == nil or EncounterData.BaseArtemisCombat == nil then
+        return
+    end
+
+    plan:appendUnique(EncounterData.BaseArtemisCombat, "RequireNotRoomReward", replacement)
+
+    log("Added %s to BaseArtemisCombat.RequireNotRoomReward", replacement)
 end)
 
 internal.registerPatchBuilder(function(plan, read, log)
