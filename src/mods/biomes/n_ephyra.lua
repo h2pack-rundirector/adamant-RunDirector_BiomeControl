@@ -79,16 +79,19 @@ internal.registerStateField({
     type = "dropdown",
     configKey = "ReplaceHermesInEphyra",
     label = "Hub Hermes Replacement",
+    default = "",
     values = internal.hubRewardReplacementOptions,
     displayValues = internal.hubRewardReplacementDisplayValues,
 })
 internal.registerStateField({
-    type = "int32",
+    type = "int",
     configKey = "PackedBannedEphyraSubRoomRewards",
+    default = 0,
 })
 internal.registerStateField({
-    type = "int32",
+    type = "int",
     configKey = "PackedBannedEphyraSubRoomRewardsHard",
+    default = 0,
 })
 
 internal.registerBiomeRoom("N", {

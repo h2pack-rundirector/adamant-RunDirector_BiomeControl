@@ -10,6 +10,7 @@ local chalk = mods["SGG_Modding-Chalk"]
 local reload = mods["SGG_Modding-ReLoad"]
 lib = mods["adamant-ModpackLib"]
 
+local dataDefaults = import("config.lua")
 local config = chalk.auto("config.lua")
 
 local PACK_ID = "run-director"
@@ -41,187 +42,148 @@ internal.REGION_OPTIONS = {
     { label = "Surface", value = internal.REGION_SURFACE },
 }
 internal.regionFilter = config.ViewRegion or internal.REGION_UNDERWORLD
-internal.schemaFieldByConfigKey = {}
-internal.depthRuntimeFields = {}
 
-local function AddSchemaField(schema, seen, field)
-    local key = tostring(field.configKey)
-    if seen[key] then return end
-    seen[key] = true
-    table.insert(schema, field)
-end
+-- =============================================================================
+-- STORAGE
+-- =============================================================================
 
-local function AddDepthSchemaFields(schema, seen, definitions)
-    for _, def in ipairs(definitions) do
-        AddSchemaField(schema, seen, {
-            type = "stepper",
-            configKey = def.configKeyMin,
-            label = def.label .. " Min",
-            default = config[def.configKeyMin] or def.minDefault,
-            min = def.minDefault,
-            max = def.maxDefault,
-        })
-        AddSchemaField(schema, seen, {
-            type = "stepper",
-            configKey = def.configKeyMax,
-            label = def.label .. " Max",
-            default = config[def.configKeyMax] or def.maxDefault,
-            min = def.minDefault,
-            max = def.maxDefault,
-        })
+definition.storage = {
+    { type = "bool",   configKey = "OnlyAllowForcedEncounters" },
+    { type = "bool",   configKey = "IgnoreMaxDepth" },
+    { type = "int",    configKey = "NPCSpacing",                     min = 1, max = 12 },
+    { type = "bool",   configKey = "PrioritizeSpecificRewardEnabled" },
+    { type = "string", configKey = "PriorityBiome1" },
+    { type = "string", configKey = "PriorityBiome2" },
+    { type = "string", configKey = "PriorityBiome3" },
+    { type = "string", configKey = "PriorityBiome4" },
+    { type = "bool",   configKey = "PrioritizeTrialRewardEnabled" },
+    { type = "string", configKey = "PriorityTrial1" },
+    { type = "string", configKey = "PriorityTrial2" },
+    { type = "int",    configKey = "ViewRegion" },
+}
+
+-- Special state fields registered by biome files
+local STORAGE_TYPE_MAP = { checkbox = "bool", stepper = "int", dropdown = "string", int32 = "int" }
+
+for _, field in ipairs(internal.specialStateFields) do
+    local storageType = STORAGE_TYPE_MAP[field.type] or field.type
+    local default = field.default
+    if default == nil then
+        if storageType == "bool" then default = false
+        elseif storageType == "string" then default = ""
+        else default = field.min or 0
+        end
     end
+    table.insert(definition.storage, {
+        type      = storageType,
+        configKey = field.configKey,
+        default   = default,
+        min       = field.min,
+        max       = field.max,
+    })
 end
 
-local function BuildDepthRuntimeFields(definitions)
-    for _, def in ipairs(definitions) do
-        local minField = internal.schemaFieldByConfigKey[def.configKeyMin]
-        local maxField = internal.schemaFieldByConfigKey[def.configKeyMax]
-        internal.depthRuntimeFields[def.configKeyMin] = {
-            type = "stepper",
-            configKey = minField.configKey,
-            label = "Min",
-            default = minField.default,
-            min = minField.min,
-            max = minField.max,
-        }
-        internal.depthRuntimeFields[def.configKeyMax] = {
-            type = "stepper",
-            configKey = maxField.configKey,
-            label = "Max",
-            default = maxField.default,
-            min = maxField.min,
-            max = maxField.max,
-        }
-    end
+-- Special range fields registered by biome files (two int nodes per pair)
+for _, field in ipairs(internal.specialRangeFields) do
+    table.insert(definition.storage, { type = "int", configKey = field.configKeyMin, default = field.min, min = field.min, max = field.max })
+    table.insert(definition.storage, { type = "int", configKey = field.configKeyMax, default = field.max, min = field.min, max = field.max })
 end
 
-definition.stateSchema = {}
-do
+-- Packed mode storage (room modes and NPC modes)
+for _, configKey in ipairs(internal.packedModeConfigKeys) do
+    table.insert(definition.storage, { type = "int", configKey = configKey, default = 0 })
+end
+for _, configKey in ipairs(internal.packedNPCModeConfigKeys) do
+    table.insert(definition.storage, { type = "int", configKey = configKey, default = 0 })
+end
+
+-- Depth storage nodes: two ints per room/NPC definition
+local function AddDepthStorageNodes(definitions)
     local seen = {}
-    AddSchemaField(definition.stateSchema, seen, {
-        type = "checkbox",
-        configKey = "OnlyAllowForcedEncounters",
-        label = "Only Allow Forced NPC Encounters",
-        default = config.OnlyAllowForcedEncounters,
-    })
-    AddSchemaField(definition.stateSchema, seen, {
-        type = "checkbox",
-        configKey = "IgnoreMaxDepth",
-        label = "Ignore NPC Max Depth Requirements",
-        default = config.IgnoreMaxDepth,
-    })
-    AddSchemaField(definition.stateSchema, seen, {
-        type = "stepper",
-        configKey = "NPCSpacing",
-        label = "Global NPC Spacing",
-        default = config.NPCSpacing,
-        min = 1,
-        max = 12,
-    })
-    AddSchemaField(definition.stateSchema, seen, {
-        type = "checkbox",
-        configKey = "PrioritizeSpecificRewardEnabled",
-        label = "Prioritize First Reward in Each Biome",
-        default = config.PrioritizeSpecificRewardEnabled,
-    })
-    AddSchemaField(definition.stateSchema, seen, {
-        type = "dropdown",
-        configKey = "PriorityBiome1",
-        label = "Route Biome 1 Priority",
-        values = internal.priorityOptions,
-        displayValues = internal.priorityDisplayValues,
-        default = config.PriorityBiome1,
-    })
-    AddSchemaField(definition.stateSchema, seen, {
-        type = "dropdown",
-        configKey = "PriorityBiome2",
-        label = "Route Biome 2 Priority",
-        values = internal.priorityOptions,
-        displayValues = internal.priorityDisplayValues,
-        default = config.PriorityBiome2,
-    })
-    AddSchemaField(definition.stateSchema, seen, {
-        type = "dropdown",
-        configKey = "PriorityBiome3",
-        label = "Route Biome 3 Priority",
-        values = internal.priorityOptions,
-        displayValues = internal.priorityDisplayValues,
-        default = config.PriorityBiome3,
-    })
-    AddSchemaField(definition.stateSchema, seen, {
-        type = "dropdown",
-        configKey = "PriorityBiome4",
-        label = "Route Biome 4 Priority",
-        values = internal.priorityOptions,
-        displayValues = internal.priorityDisplayValues,
-        default = config.PriorityBiome4,
-    })
-    AddSchemaField(definition.stateSchema, seen, {
-        type = "checkbox",
-        configKey = "PrioritizeTrialRewardEnabled",
-        label = "Prioritize Trial Rewards",
-        default = config.PrioritizeTrialRewardEnabled,
-    })
-    AddSchemaField(definition.stateSchema, seen, {
-        type = "dropdown",
-        configKey = "PriorityTrial1",
-        label = "Trial Priority A",
-        values = internal.priorityOptions,
-        displayValues = internal.priorityDisplayValues,
-        default = config.PriorityTrial1,
-    })
-    AddSchemaField(definition.stateSchema, seen, {
-        type = "dropdown",
-        configKey = "PriorityTrial2",
-        label = "Trial Priority B",
-        values = internal.priorityOptions,
-        displayValues = internal.priorityDisplayValues,
-        default = config.PriorityTrial2,
-    })
+    for _, def in ipairs(definitions) do
+        if not seen[def.configKeyMin] then
+            seen[def.configKeyMin] = true
+            table.insert(definition.storage, { type = "int", configKey = def.configKeyMin, default = def.minDefault, min = def.minDefault, max = def.maxDefault })
+        end
+        if not seen[def.configKeyMax] then
+            seen[def.configKeyMax] = true
+            table.insert(definition.storage, { type = "int", configKey = def.configKeyMax, default = def.maxDefault, min = def.minDefault, max = def.maxDefault })
+        end
+    end
+end
 
-    for _, field in ipairs(internal.specialStateFields) do
-        AddSchemaField(definition.stateSchema, seen, {
-            type = field.type,
-            configKey = field.configKey,
-            label = field.label,
-            default = config[field.configKey],
-            min = field.min,
-            max = field.max,
-            values = field.values,
+AddDepthStorageNodes(internal.roomDefinitions)
+AddDepthStorageNodes(internal.npcDefinitions)
+
+-- =============================================================================
+-- STORE
+-- =============================================================================
+
+public.store = lib.createStore(config, definition, dataDefaults)
+store = public.store
+RunDirectorBiomeControl_Public = public
+
+-- =============================================================================
+-- UI NODE REGISTRIES
+-- Built after createStore so storage aliases are resolved.
+-- Nodes are not in definition.ui — BiomeControl uses custom DrawTab.
+-- ui.lua calls lib.drawUiNode via these lookup tables.
+-- =============================================================================
+
+local uiNodes = {
+    { type = "dropdown", label = "Route Biome 1 Priority", binds = { value = "PriorityBiome1" }, values = internal.priorityOptions, displayValues = internal.priorityDisplayValues },
+    { type = "dropdown", label = "Route Biome 2 Priority", binds = { value = "PriorityBiome2" }, values = internal.priorityOptions, displayValues = internal.priorityDisplayValues },
+    { type = "dropdown", label = "Route Biome 3 Priority", binds = { value = "PriorityBiome3" }, values = internal.priorityOptions, displayValues = internal.priorityDisplayValues },
+    { type = "dropdown", label = "Route Biome 4 Priority", binds = { value = "PriorityBiome4" }, values = internal.priorityOptions, displayValues = internal.priorityDisplayValues },
+    { type = "dropdown", label = "Trial Priority A",       binds = { value = "PriorityTrial1" }, values = internal.priorityOptions, displayValues = internal.priorityDisplayValues },
+    { type = "dropdown", label = "Trial Priority B",       binds = { value = "PriorityTrial2" }, values = internal.priorityOptions, displayValues = internal.priorityDisplayValues },
+    { type = "stepper",  label = "Global NPC Spacing",     binds = { value = "NPCSpacing"     }, min = 1, max = 12 },
+}
+
+for _, field in ipairs(internal.specialStateFields) do
+    if field.type == "dropdown" then
+        table.insert(uiNodes, {
+            type          = "dropdown",
+            label         = field.label or field.configKey,
+            binds         = { value = field.configKey },
+            values        = field.values,
             displayValues = field.displayValues,
         })
     end
-
-    for _, configKey in ipairs(internal.packedModeConfigKeys) do
-        AddSchemaField(definition.stateSchema, seen, {
-            type = "int32",
-            configKey = configKey,
-            default = config[configKey] or 0,
-        })
-    end
-
-    for _, configKey in ipairs(internal.packedNPCModeConfigKeys) do
-        AddSchemaField(definition.stateSchema, seen, {
-            type = "int32",
-            configKey = configKey,
-            default = config[configKey] or 0,
-        })
-    end
-
-    AddDepthSchemaFields(definition.stateSchema, seen, internal.roomDefinitions)
-    AddDepthSchemaFields(definition.stateSchema, seen, internal.npcDefinitions)
 end
 
-for _, field in ipairs(definition.stateSchema) do
-    internal.schemaFieldByConfigKey[field.configKey] = field
+for _, def in ipairs(internal.roomDefinitions) do
+    table.insert(uiNodes, {
+        type = "steppedRange", label = "",
+        binds = { min = def.configKeyMin, max = def.configKeyMax },
+        min = def.minDefault, max = def.maxDefault,
+        default = def.minDefault, defaultMax = def.maxDefault,
+    })
 end
 
-BuildDepthRuntimeFields(internal.roomDefinitions)
-BuildDepthRuntimeFields(internal.npcDefinitions)
+for _, def in ipairs(internal.npcDefinitions) do
+    table.insert(uiNodes, {
+        type = "steppedRange", label = "",
+        binds = { min = def.configKeyMin, max = def.configKeyMax },
+        min = def.minDefault, max = def.maxDefault,
+        default = def.minDefault, defaultMax = def.maxDefault,
+    })
+end
 
-public.store = lib.createStore(config, definition)
-store = public.store
-RunDirectorBiomeControl_Public = public
+for _, field in ipairs(internal.specialRangeFields) do
+    table.insert(uiNodes, {
+        type = "steppedRange", label = "",
+        binds = { min = field.configKeyMin, max = field.configKeyMax },
+        min = field.min, max = field.max,
+        default = field.min, defaultMax = field.max,
+    })
+end
+
+internal.uiNodes = lib.prepareUiNodes(uiNodes, "BiomeControl ui", definition.storage)
+
+-- =============================================================================
+-- PATCH PLAN + HOOKS
+-- =============================================================================
 
 definition.patchPlan = function(plan)
     if internal.BuildPatchPlan then

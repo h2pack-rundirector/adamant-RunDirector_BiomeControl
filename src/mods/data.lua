@@ -36,6 +36,7 @@ internal.biomeRoomEntries = {}
 internal.biomeRewards = {}
 internal.biomeSpecials = {}
 internal.specialStateFields = {}
+internal.specialRangeFields = {}
 internal.biomePatchBuilders = {}
 internal.packedModeConfigKeys = {}
 internal.packedNPCModeConfigKeys = {}
@@ -89,6 +90,10 @@ end
 
 function internal.registerStateField(field)
     table.insert(internal.specialStateFields, cloneData(field))
+end
+
+function internal.registerRangeField(field)
+    table.insert(internal.specialRangeFields, cloneData(field))
 end
 
 function internal.registerPatchBuilder(builder)

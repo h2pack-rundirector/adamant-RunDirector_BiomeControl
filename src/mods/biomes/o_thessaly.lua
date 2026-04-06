@@ -67,19 +67,11 @@ internal.registerRoomControl({ id = "Trial", type = "Trial", biome = "O", useReg
 internal.registerRoomControl({ id = "Fountain", type = "Fountain", biome = "O", useRegionInKey = true, min = 3, max = 5 })
 internal.registerRoomControl({ id = "Shop", type = "Shop", biome = "O", useRegionInKey = true, min = 4, max = 5 })
 
-internal.registerStateField({
-    type = "stepper",
-    configKey = "PackedForcedThessalyMiniBossMin",
-    label = "Forced Min",
-    min = 3,
-    max = 5,
-})
-internal.registerStateField({
-    type = "stepper",
-    configKey = "PackedForcedThessalyMiniBossMax",
-    label = "Forced Max",
-    min = 3,
-    max = 5,
+internal.registerRangeField({
+    label = "Forced Range",
+    configKeyMin = "PackedForcedThessalyMiniBossMin",
+    configKeyMax = "PackedForcedThessalyMiniBossMax",
+    min = 3, max = 5,
 })
 
 internal.registerBiomeRoom("O", {

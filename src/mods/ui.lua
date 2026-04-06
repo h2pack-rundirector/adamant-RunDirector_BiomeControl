@@ -4,8 +4,6 @@ local DEFAULT_FIELD_MEDIUM = internal.DEFAULT_FIELD_MEDIUM
 local REGION_UNDERWORLD = internal.REGION_UNDERWORLD
 -- local REGION_SURFACE = internal.REGION_SURFACE
 local REGION_OPTIONS = internal.REGION_OPTIONS
-local schemaFieldByConfigKey = internal.schemaFieldByConfigKey
-local depthRuntimeFields = internal.depthRuntimeFields
 local GetPackedModeValue = internal.GetPackedModeValue
 local SetPackedModeValue = internal.SetPackedModeValue
 local GetPackedModeDisplay = internal.GetPackedModeDisplay
@@ -40,27 +38,15 @@ local function SetPackedOptionChecked(uiState, configKey, bit, enabled)
     end
 end
 
-local function DrawStepper(ui, field, value, width)
-    ui.PushID(field.configKey)
-    local newValue, changed = lib.drawField(ui, field, value, width)
-    ui.PopID()
-    return newValue, changed
+local function DrawManagedField(ui, uiState, alias, width)
+    local node = internal.uiNodes[alias]
+    if not node then return end
+    lib.drawUiNode(ui, node, uiState, width)
 end
 
-local function DrawManagedField(ui, uiState, field, width)
-    if not field then return end
-    local value = uiState.get(field.configKey)
-    ui.PushID(field.configKey)
-    local newValue, changed = lib.drawField(ui, field, value, width)
-    ui.PopID()
-    if changed then
-        uiState.set(field.configKey, newValue)
-    end
-end
-
-local function GetChoiceDisplay(field, value)
-    if field and field.displayValues and field.displayValues[value] then
-        return field.displayValues[value]
+local function GetChoiceDisplay(node, value)
+    if node and node.displayValues and node.displayValues[value] ~= nil then
+        return tostring(node.displayValues[value])
     end
     return tostring(value)
 end
@@ -97,55 +83,6 @@ local function IsBiomeRoomEntryVisible(uiState, entry)
         return false
     end
     return value == true
-end
-
-local function DrawFieldRangeControls(ui, uiState, minConfigKey, maxConfigKey, defaultMin, defaultMax, width, opts)
-    local minField = depthRuntimeFields[minConfigKey]
-    local maxField = depthRuntimeFields[maxConfigKey]
-    if not minField or not maxField then return end
-
-    opts = opts or {}
-    local currentMin = uiState.get(minConfigKey)
-    local currentMax = uiState.get(maxConfigKey)
-    local inputWidth = (opts.inputWidthFactor or 1.0) * width
-
-    ui.TextDisabled(string.format("(Default %d-%d)", defaultMin, defaultMax))
-    ui.SameLine()
-
-    minField.max = currentMax
-    if opts.prefixText and opts.prefixText ~= "" then
-        ui.Text(opts.prefixText)
-        ui.SameLine()
-    end
-
-    local newMin, minChanged = DrawStepper(ui, minField, currentMin, inputWidth)
-    if minChanged then
-        uiState.set(minConfigKey, newMin)
-        currentMin = newMin
-    end
-
-    ui.SameLine()
-    ui.Text("to")
-    ui.SameLine()
-
-    maxField.min = currentMin
-    local newMax, maxChanged = DrawStepper(ui, maxField, currentMax, inputWidth)
-    if maxChanged then
-        uiState.set(maxConfigKey, newMax)
-    end
-end
-
-local function DrawRangeControls(ui, uiState, def, width, opts)
-    DrawFieldRangeControls(
-        ui,
-        uiState,
-        def.configKeyMin,
-        def.configKeyMax,
-        def.minDefault,
-        def.maxDefault,
-        width,
-        opts
-    )
 end
 
 local function GetDefinitionEditorKey(def)
@@ -197,7 +134,7 @@ local function DrawDefinitionEntry(ui, uiState, def, depthWidth)
         end)
         mode = GetDefinitionMode(uiState, def)
         if mode == "forced" then
-            DrawRangeControls(ui, uiState, def, depthWidth, { inputWidthFactor = def.type == "Story" and 0.85 or 1.0 })
+            DrawManagedField(ui, uiState, def.configKeyMin, depthWidth)
         end
         ui.Unindent()
     end
@@ -256,7 +193,7 @@ local function DrawNPCGroupEntry(ui, uiState, group, depthWidth)
         end, group)
         local def = FindNPCDefinition(group, mode)
         if def then
-            DrawRangeControls(ui, uiState, def, depthWidth)
+            DrawManagedField(ui, uiState, def.configKeyMin, depthWidth)
         end
         ui.Unindent()
     end
@@ -295,10 +232,10 @@ local function GetRoomEntrySummary(uiState, entry)
         end, entry)
         summary = GetPackedModeDisplay(entry, value)
     else
-        local field = schemaFieldByConfigKey[entry.configKey]
-        if not field then return "" end
+        local node = internal.uiNodes[entry.configKey]
+        if not node then return "" end
         local value = uiState.view[entry.configKey]
-        summary = GetChoiceDisplay(field, value)
+        summary = GetChoiceDisplay(node, value)
     end
     if IsRoomEntryRangeVisible(uiState, entry) then
         local minValue = uiState.view[entry.rangeConfigKeys.min]
@@ -309,13 +246,13 @@ local function GetRoomEntrySummary(uiState, entry)
 end
 
 local function DrawRoomEntry(ui, uiState, entry, depthWidth)
-    local field = entry.kind ~= "modeField" and schemaFieldByConfigKey[entry.configKey] or nil
+    local node = entry.kind ~= "modeField" and internal.uiNodes[entry.configKey] or nil
 
     local editorKey = GetRoomEntryEditorKey(entry)
     local isEditing = internal.activeRoomEditorKey == editorKey
 
     ui.PushID(editorKey)
-    ui.Text(entry.label or field.label or field.configKey)
+    ui.Text(entry.label or (node and node.label) or entry.configKey)
     ui.SameLine()
     ui.TextDisabled(GetRoomEntrySummary(uiState, entry))
     ui.SameLine()
@@ -340,24 +277,13 @@ local function DrawRoomEntry(ui, uiState, entry, depthWidth)
             DrawChoiceValuesAsRadio(ui, value, entry.modeValues, entry.modeDisplayValues, function(modeValue)
                 SetPackedModeValue(uiState, entry, modeValue)
             end)
-        elseif field then
-            DrawChoiceValuesAsRadio(ui, uiState.view[field.configKey], field.values, field.displayValues, function(value)
-                uiState.set(field.configKey, value)
+        elseif node then
+            DrawChoiceValuesAsRadio(ui, uiState.view[entry.configKey], node.values, node.displayValues, function(value)
+                uiState.set(entry.configKey, value)
             end)
         end
         if IsRoomEntryRangeVisible(uiState, entry) then
-            local minField = schemaFieldByConfigKey[entry.rangeConfigKeys.min]
-            local maxField = schemaFieldByConfigKey[entry.rangeConfigKeys.max]
-            DrawFieldRangeControls(
-                ui,
-                uiState,
-                entry.rangeConfigKeys.min,
-                entry.rangeConfigKeys.max,
-                minField.default,
-                maxField.default,
-                depthWidth,
-                { inputWidthFactor = 1.0 }
-            )
+            DrawManagedField(ui, uiState, entry.rangeConfigKeys.min, depthWidth)
         end
         if entry.helpText and entry.helpText ~= "" then
             ui.TextDisabled(entry.helpText)
@@ -469,7 +395,7 @@ local function DrawBiomeSections(ui, uiState, biome, depthWidth)
             ui.Indent()
             for _, reward in ipairs(biomeRewards) do
                 if reward.kind == "field" then
-                    DrawManagedField(ui, uiState, schemaFieldByConfigKey[reward.configKey], depthWidth * 2)
+                    DrawManagedField(ui, uiState, reward.configKey, depthWidth * 2)
                     if reward.helpText and reward.helpText ~= "" then
                         ui.TextDisabled(reward.helpText)
                     end
@@ -535,10 +461,10 @@ local function DrawSettingsTab(ui, uiState, width)
     ui.TextDisabled("(Uses route order: Biome 1 through Biome 4)")
     if uiState.view.PrioritizeSpecificRewardEnabled then
         ui.Indent()
-        DrawManagedField(ui, uiState, schemaFieldByConfigKey["PriorityBiome1"], width)
-        DrawManagedField(ui, uiState, schemaFieldByConfigKey["PriorityBiome2"], width)
-        DrawManagedField(ui, uiState, schemaFieldByConfigKey["PriorityBiome3"], width)
-        DrawManagedField(ui, uiState, schemaFieldByConfigKey["PriorityBiome4"], width)
+        DrawManagedField(ui, uiState, "PriorityBiome1", width)
+        DrawManagedField(ui, uiState, "PriorityBiome2", width)
+        DrawManagedField(ui, uiState, "PriorityBiome3", width)
+        DrawManagedField(ui, uiState, "PriorityBiome4", width)
         ui.Unindent()
     end
 
@@ -554,8 +480,8 @@ local function DrawSettingsTab(ui, uiState, width)
     end
     if uiState.view.PrioritizeTrialRewardEnabled then
         ui.Indent()
-        DrawManagedField(ui, uiState, schemaFieldByConfigKey["PriorityTrial1"], width)
-        DrawManagedField(ui, uiState, schemaFieldByConfigKey["PriorityTrial2"], width)
+        DrawManagedField(ui, uiState, "PriorityTrial1", width)
+        DrawManagedField(ui, uiState, "PriorityTrial2", width)
         ui.Unindent()
     end
 end
@@ -611,7 +537,7 @@ local function DrawNPCTab(ui, uiState, width, depthWidth)
         ui.Separator()
         ui.Spacing()
 
-        DrawManagedField(ui, uiState, schemaFieldByConfigKey["NPCSpacing"], width)
+        DrawManagedField(ui, uiState, "NPCSpacing", width)
         ui.TextDisabled("(Minimum rooms between field NPC encounters)")
 
         ui.Unindent()
@@ -682,17 +608,16 @@ function internal.DrawQuickContent(ui, uiState, theme)
             local entryKey = entry.modeKey or entry.configKey
             if entryKey and not seenEntries[entryKey] then
                 seenEntries[entryKey] = true
-                local value
                 if entry.kind == "modeField" then
-                    value = GetPackedModeValue(function(configKey)
+                    local value = GetPackedModeValue(function(configKey)
                         return uiState.view[configKey]
                     end, entry)
                     if value and value ~= entry.defaultMode then
                         enabledCount = enabledCount + 1
                     end
                 else
-                    local field = schemaFieldByConfigKey[entry.configKey]
-                    value = field and (uiState.view[entry.configKey] or field.default)
+                    local node = internal.uiNodes[entry.configKey]
+                    local value = node and (uiState.view[entry.configKey] or node.default)
                     if value and value ~= "default" then
                         enabledCount = enabledCount + 1
                     end
