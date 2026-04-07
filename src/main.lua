@@ -22,13 +22,10 @@ import("mods/data.lua")
 
 public.definition = {
     modpack = PACK_ID,
-    id = "RunDirectorBiomeControl",
+    id = "BiomeControl",
     name = "Biome Control",
-    tabLabel = "Biome Control",
-    category = "Run Director",
-    group = "Run Setup",
     tooltip = "Control biome rooms, NPC encounters, rewards, and biome-specific tweaks.",
-    default = false,
+    default = dataDefaults.Enabled,
     special = true,
     affectsRunData = true,
 }

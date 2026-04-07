@@ -4,7 +4,7 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "adamant"
 name = "RunDirector_BiomeControl"
-description = "TODO: description for BiomeControl"
+description = "Control the structure of each biome in both routes."
 versionNumber = "0.0.1"
 websiteUrl = "https://github.com/h2pack-rundirector/adamant-RunDirector_BiomeControl"
 containsNsfwContent = false
