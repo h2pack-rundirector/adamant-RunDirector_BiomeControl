@@ -3,10 +3,10 @@ schemaVersion = "0.0.1"
 
 [package]
 namespace = "adamant"
-name = "BiomeControl"
+name = "RunDirector_BiomeControl"
 description = "TODO: description for BiomeControl"
 versionNumber = "0.0.1"
-websiteUrl = "https://github.com/h2pack-rundirector/BiomeControl"
+websiteUrl = "https://github.com/h2pack-rundirector/adamant-RunDirector_BiomeControl"
 containsNsfwContent = false
 
 [package.dependencies]
