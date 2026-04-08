@@ -139,12 +139,15 @@ local uiNodes = {
 
 local function MakeDepthRangeGeometry()
     return {
-        separatorStart = 160,
-        control2Start = 200,
-        valueWidth = 110,
-        valueAlign = "center",
-        incrementStart = 100,
-        decrementStart  = 0,
+        slots = {
+            { name = "min.decrement", start = 0 },
+            { name = "min.value", start = 10, width = 100, align = "center" },
+            { name = "min.increment", start = 100 },
+            { name = "separator", start = 150 },
+            { name = "max.decrement", start = 200 },
+            { name = "max.value", start = 210, width = 100, align = "center" },
+            { name = "max.increment", start = 300 },
+        },
     }
 end
 
