@@ -137,6 +137,17 @@ local uiNodes = {
     { type = "stepper",  label = "Global NPC Spacing",     binds = { value = "NPCSpacing"     }, min = 1, max = 12 },
 }
 
+local function MakeDepthRangeGeometry()
+    return {
+        separatorStart = 160,
+        control2Start = 200,
+        valueWidth = 110,
+        valueAlign = "center",
+        incrementStart = 100,
+        decrementStart  = 0,
+    }
+end
+
 for _, field in ipairs(internal.specialStateFields) do
     if field.type == "dropdown" then
         table.insert(uiNodes, {
@@ -155,6 +166,7 @@ for _, def in ipairs(internal.roomDefinitions) do
         binds = { min = def.configKeyMin, max = def.configKeyMax },
         min = def.minDefault, max = def.maxDefault,
         default = def.minDefault, defaultMax = def.maxDefault,
+        geometry = MakeDepthRangeGeometry(),
     })
 end
 
@@ -164,6 +176,7 @@ for _, def in ipairs(internal.npcDefinitions) do
         binds = { min = def.configKeyMin, max = def.configKeyMax },
         min = def.minDefault, max = def.maxDefault,
         default = def.minDefault, defaultMax = def.maxDefault,
+        geometry = MakeDepthRangeGeometry(),
     })
 end
 
@@ -173,6 +186,7 @@ for _, field in ipairs(internal.specialRangeFields) do
         binds = { min = field.configKeyMin, max = field.configKeyMax },
         min = field.min, max = field.max,
         default = field.min, defaultMax = field.max,
+        geometry = MakeDepthRangeGeometry(),
     })
 end
 

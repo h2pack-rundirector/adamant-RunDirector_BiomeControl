@@ -10,6 +10,8 @@ local GetPackedModeDisplay = internal.GetPackedModeDisplay
 
 local TYPE_ORDER = { "Story", "Trial", "Shop", "Fountain", "MiniBoss" }
 local NON_MINIBOSS_TYPE_ORDER = { "Story", "Trial", "Shop", "Fountain" }
+local SUMMARY_COLUMN_START = 220
+local ACTION_COLUMN_START = 420
 
 local function IsBiomeVisible(biome)
     local isUnderworld = biome == "F" or biome == "G" or biome == "H" or biome == "I"
@@ -42,6 +44,20 @@ local function DrawManagedField(ui, uiState, alias, width)
     local node = internal.uiNodes[alias]
     if not node then return end
     lib.drawUiNode(ui, node, uiState, width)
+end
+
+local function DrawSummaryRow(ui, label, summary)
+    local rowStart = type(ui.GetCursorPosX) == "function" and ui.GetCursorPosX() or 0
+    ui.Text(label or "")
+    ui.SameLine()
+    if type(ui.SetCursorPosX) == "function" then
+        ui.SetCursorPosX(rowStart + SUMMARY_COLUMN_START)
+    end
+    ui.TextDisabled(summary or "")
+    ui.SameLine()
+    if type(ui.SetCursorPosX) == "function" then
+        ui.SetCursorPosX(rowStart + ACTION_COLUMN_START)
+    end
 end
 
 local function GetChoiceDisplay(node, value)
@@ -111,10 +127,7 @@ local function DrawDefinitionEntry(ui, uiState, def, depthWidth)
     local mode = GetDefinitionMode(uiState, def)
 
     ui.PushID(editorKey)
-    ui.Text(def.label)
-    ui.SameLine()
-    ui.TextDisabled(GetDefinitionSummary(uiState, def))
-    ui.SameLine()
+    DrawSummaryRow(ui, def.label, GetDefinitionSummary(uiState, def))
     if isEditing then
         if ui.Button("Done") then
             internal.activeRoomEditorKey = nil
@@ -167,10 +180,7 @@ local function DrawNPCGroupEntry(ui, uiState, group, depthWidth)
     end, group)
 
     ui.PushID(editorKey)
-    ui.Text(group.label)
-    ui.SameLine()
-    ui.TextDisabled(GetNPCGroupSummary(uiState, group))
-    ui.SameLine()
+    DrawSummaryRow(ui, group.label, GetNPCGroupSummary(uiState, group))
     if isEditing then
         if ui.Button("Done") then
             internal.activeNPCEditorKey = nil
@@ -252,10 +262,7 @@ local function DrawRoomEntry(ui, uiState, entry, depthWidth)
     local isEditing = internal.activeRoomEditorKey == editorKey
 
     ui.PushID(editorKey)
-    ui.Text(entry.label or (node and node.label) or entry.configKey)
-    ui.SameLine()
-    ui.TextDisabled(GetRoomEntrySummary(uiState, entry))
-    ui.SameLine()
+    DrawSummaryRow(ui, entry.label or (node and node.label) or entry.configKey, GetRoomEntrySummary(uiState, entry))
     if isEditing then
         if ui.Button("Done") then
             internal.activeRoomEditorKey = nil
