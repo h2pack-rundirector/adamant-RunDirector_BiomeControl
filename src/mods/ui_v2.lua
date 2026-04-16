@@ -137,7 +137,6 @@ local function BuildRangeDropdownPair(minAlias, maxAlias, minValue, maxValue, vi
                 values = values,
                 label = "",
                 controlWidth = 60,
-                tooltip = "Minimum value",
             },
             {
                 type = "text",
@@ -150,7 +149,6 @@ local function BuildRangeDropdownPair(minAlias, maxAlias, minValue, maxValue, vi
                 values = values,
                 label = "",
                 controlWidth = 60,
-                tooltip = "Maximum value",
             },
         },
     }
@@ -237,7 +235,7 @@ local function BuildBiomeRoomEntryModeNode(entry)
         label = "",
         values = values,
         displayValues = displayValues,
-        controlWidth = 160,
+        controlWidth = 250,
     }
 end
 
