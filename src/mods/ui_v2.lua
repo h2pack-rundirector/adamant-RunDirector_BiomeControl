@@ -18,6 +18,16 @@ local NPC_MODE_DISPLAY_VALUES = {
     [NPC_MODE_FORCED] = "Forced",
 }
 
+local NPC_SPACING_VALUES = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 }
+
+local NPC_GROUP_COLORS = {
+    Artemis = { 15 / 255, 255 / 255, 9 / 255, 1.0 },
+    Nemesis = { 115 / 255, 146 / 255, 210 / 255, 1.0 },
+    Athena = { 255 / 255, 216 / 255, 60 / 255, 1.0 },
+    Heracles = { 255 / 255, 125 / 255, 25 / 255, 1.0 },
+    Icarus = { 243 / 255, 215 / 255, 116 / 255, 1.0 },
+}
+
 local BIOME_REGION_BY_KEY = {}
 for _, biome in ipairs(internal.biomeTabs or {}) do
     BIOME_REGION_BY_KEY[biome.key] = biome.region
@@ -27,6 +37,17 @@ local RANGE_FIELD_BY_MIN_KEY = {}
 for _, field in ipairs(internal.specialRangeFields or {}) do
     RANGE_FIELD_BY_MIN_KEY[field.configKeyMin] = field
 end
+
+local BIOME_SECTION_COLORS = {
+    rooms = { 0.90, 0.82, 0.56, 1.0 },
+    minibosses = { 0.88, 0.38, 0.32, 1.0 },
+    rewards = { 0.70, 0.84, 0.96, 1.0 },
+    special = { 1.0, 0.60, 0.28, 1.0 },
+}
+
+local BIOME_SUBSECTION_COLORS = {
+    rooms = { 0.82, 0.74, 0.48, 1.0 },
+}
 
 local ROOM_TYPE_LABELS = {
     Story = "Story",
@@ -43,6 +64,8 @@ local ROOM_TYPE_ORDER = {
     "Shop",
     "MiniBoss",
 }
+
+local UI_V2_ROOT_CACHE_KEY = "BiomeControl ui_v2 root"
 
 local FLAT_ROOM_TYPES = {
     Story = true,
@@ -81,24 +104,65 @@ local function BuildNpcModeNode(def)
     return {
         type = "dropdown",
         binds = { value = def.modeKey },
+        label = "",
         values = NPC_MODE_VALUES,
         displayValues = NPC_MODE_DISPLAY_VALUES,
         controlWidth = 120,
     }
 end
 
-local function BuildNpcDepthNode(def)
+local function BuildIntegerDropdownValues(minValue, maxValue)
+    local values = {}
+    for value = minValue, maxValue do
+        values[#values + 1] = value
+    end
+    return values
+end
+
+local function BuildRangeDropdownPair(minAlias, maxAlias, minValue, maxValue, visibleIf)
+    local values = BuildIntegerDropdownValues(minValue, maxValue)
     return {
-        type = "steppedRange",
-        binds = { min = def.configKeyMin, max = def.configKeyMax },
-        min = def.minDefault,
-        max = def.maxDefault,
-        default = def.minDefault,
-        defaultMax = def.maxDefault,
-        valueWidth = 42,
-        valueAlign = "center",
-        visibleIf = { alias = def.modeKey, value = NPC_MODE_FORCED },
+        type = "hstack",
+        gap = 8,
+        visibleIf = visibleIf,
+        children = {
+            {
+                type = "text",
+                text = "from:",
+                alignToFramePadding = true,
+            },
+            {
+                type = "dropdown",
+                binds = { value = minAlias },
+                values = values,
+                label = "",
+                controlWidth = 60,
+                tooltip = "Minimum value",
+            },
+            {
+                type = "text",
+                text = "to",
+                alignToFramePadding = true,
+            },
+            {
+                type = "dropdown",
+                binds = { value = maxAlias },
+                values = values,
+                label = "",
+                controlWidth = 60,
+                tooltip = "Maximum value",
+            },
+        },
     }
+end
+
+local function BuildNpcDepthNode(def)
+    return BuildRangeDropdownPair(
+        def.configKeyMin,
+        def.configKeyMax,
+        def.minDefault,
+        def.maxDefault,
+        { alias = def.modeKey, value = NPC_MODE_FORCED })
 end
 
 local function BuildNpcBiomeRow(def)
@@ -113,7 +177,7 @@ local function BuildNpcBiomeRow(def)
             },
             {
                 type = "hstack",
-                gap = 12,
+                gap = 18,
                 children = {
                     BuildNpcModeNode(def),
                     BuildNpcDepthNode(def),
@@ -127,6 +191,7 @@ local function BuildRoomModeNode(def)
     return {
         type = "dropdown",
         binds = { value = def.modeKey },
+        label = "",
         values = NPC_MODE_VALUES,
         displayValues = NPC_MODE_DISPLAY_VALUES,
         controlWidth = 120,
@@ -134,17 +199,12 @@ local function BuildRoomModeNode(def)
 end
 
 local function BuildRoomDepthNode(def)
-    return {
-        type = "steppedRange",
-        binds = { min = def.configKeyMin, max = def.configKeyMax },
-        min = def.minDefault,
-        max = def.maxDefault,
-        default = def.minDefault,
-        defaultMax = def.maxDefault,
-        valueWidth = 42,
-        valueAlign = "center",
-        visibleIf = { alias = def.modeKey, value = NPC_MODE_FORCED },
-    }
+    return BuildRangeDropdownPair(
+        def.configKeyMin,
+        def.configKeyMax,
+        def.minDefault,
+        def.maxDefault,
+        { alias = def.modeKey, value = NPC_MODE_FORCED })
 end
 
 local function BuildRoomDefinitionRow(def)
@@ -159,7 +219,7 @@ local function BuildRoomDefinitionRow(def)
             },
             {
                 type = "hstack",
-                gap = 12,
+                gap = 18,
                 children = {
                     BuildRoomModeNode(def),
                     BuildRoomDepthNode(def),
@@ -174,6 +234,7 @@ local function BuildBiomeRoomEntryModeNode(entry)
     return {
         type = "dropdown",
         binds = { value = entry.modeKey },
+        label = "",
         values = values,
         displayValues = displayValues,
         controlWidth = 160,
@@ -197,17 +258,12 @@ local function BuildBiomeRoomEntryDepthNode(entry)
         end
     end
 
-    return {
-        type = "steppedRange",
-        binds = { min = entry.rangeConfigKeys.min, max = entry.rangeConfigKeys.max },
-        min = minValue,
-        max = maxValue,
-        default = minValue,
-        defaultMax = maxValue,
-        valueWidth = 42,
-        valueAlign = "center",
-        visibleIf = #visibleValues > 0 and { alias = entry.modeKey, anyOf = visibleValues } or nil,
-    }
+    return BuildRangeDropdownPair(
+        entry.rangeConfigKeys.min,
+        entry.rangeConfigKeys.max,
+        minValue,
+        maxValue,
+        #visibleValues > 0 and { alias = entry.modeKey, anyOf = visibleValues } or nil)
 end
 
 local function BuildBiomeRoomEntryRow(entry)
@@ -231,7 +287,7 @@ local function BuildBiomeRoomEntryRow(entry)
                 },
                 {
                     type = "hstack",
-                    gap = 12,
+                    gap = 18,
                     children = controlChildren,
                 },
             },
@@ -260,13 +316,42 @@ local function BuildRoomSectionNode(title, definitions)
     end
 
     return {
-        type = "collapsible",
-        label = title,
-        defaultOpen = true,
+        type = "vstack",
+        gap = 8,
         children = {
+            {
+                type = "text",
+                text = title,
+                color = title == "Minibosses"
+                    and BIOME_SUBSECTION_COLORS.minibosses
+                    or BIOME_SUBSECTION_COLORS.rooms,
+            },
             {
                 type = "vstack",
                 gap = 8,
+                children = children,
+            },
+        },
+    }
+end
+
+local function WrapBiomeSection(title, color, children)
+    if type(children) ~= "table" or #children == 0 then
+        return nil
+    end
+
+    return {
+        type = "vstack",
+        gap = 8,
+        children = {
+            {
+                type = "text",
+                text = title,
+                color = color,
+            },
+            {
+                type = "vstack",
+                gap = 10,
                 children = children,
             },
         },
@@ -287,6 +372,10 @@ local function BuildBiomeRoomsNode(biomeKey)
     end
 
     for _, typeKey in ipairs(ROOM_TYPE_ORDER) do
+        if typeKey == "MiniBoss" then
+            goto continue
+        end
+
         local definitions = biomeDefinitions[typeKey]
         if definitions and #definitions > 0 then
             if FLAT_ROOM_TYPES[typeKey] then
@@ -313,10 +402,16 @@ local function BuildBiomeRoomsNode(biomeKey)
                     entryRows[#entryRows + 1] = BuildBiomeRoomEntryRow(entry)
                 end
                 roomSections[#roomSections + 1] = {
-                    type = "collapsible",
-                    label = ROOM_TYPE_LABELS[typeKey] or typeKey,
-                    defaultOpen = true,
+                    type = "vstack",
+                    gap = 8,
                     children = {
+                        {
+                            type = "text",
+                            text = ROOM_TYPE_LABELS[typeKey] or typeKey,
+                            color = (ROOM_TYPE_LABELS[typeKey] or typeKey) == "Minibosses"
+                                and BIOME_SUBSECTION_COLORS.minibosses
+                                or BIOME_SUBSECTION_COLORS.rooms,
+                        },
                         {
                             type = "vstack",
                             gap = 8,
@@ -326,36 +421,72 @@ local function BuildBiomeRoomsNode(biomeKey)
                 }
             end
         end
+
+        ::continue::
     end
 
     if #roomRows > 0 then
         table.insert(roomSections, 1, {
-            type = "collapsible",
-            label = "Rooms",
-            defaultOpen = true,
-            children = {
-                {
-                    type = "vstack",
-                    gap = 8,
-                    children = roomRows,
-                },
-            },
+            type = "vstack",
+            gap = 8,
+            children = roomRows,
         })
     end
 
     if #roomSections == 0 then
-        roomSections[1] = {
-            type = "text",
-            text = "This biome has not been ported yet.",
-            color = { 0.65, 0.65, 0.65, 1.0 },
+        return nil
+    end
+
+    return WrapBiomeSection("Rooms", BIOME_SECTION_COLORS.rooms, roomSections)
+end
+
+local function BuildBiomeMinibossesNode(biomeKey)
+    local biomeDefinitions = internal.biomeDefinitions[biomeKey] or {}
+    local biomeRoomEntries = internal.biomeRoomEntries[biomeKey] or {}
+    local children = {}
+
+    local definitions = biomeDefinitions.MiniBoss
+    if definitions and #definitions > 0 then
+        children[#children + 1] = {
+            type = "vstack",
+            gap = 8,
+            children = (function()
+                local rows = {}
+                for _, def in ipairs(definitions) do
+                    rows[#rows + 1] = BuildRoomDefinitionRow(def)
+                end
+                return rows
+            end)(),
         }
     end
 
-    return {
-        type = "vstack",
-        gap = 12,
-        children = roomSections,
-    }
+    local extraEntries = biomeRoomEntries and (function()
+        local rows = {}
+        for _, entry in ipairs(biomeRoomEntries) do
+            if (entry.roomGroup or "Rooms") == "MiniBoss" then
+                rows[#rows + 1] = BuildBiomeRoomEntryRow(entry)
+            end
+        end
+        return rows
+    end)() or nil
+    if extraEntries and #extraEntries > 0 then
+        if #children > 0 then
+            children[#children + 1] = {
+                type = "separator",
+            }
+        end
+        children[#children + 1] = {
+            type = "vstack",
+            gap = 8,
+            children = extraEntries,
+        }
+    end
+
+    if #children == 0 then
+        return nil
+    end
+
+    return WrapBiomeSection("Minibosses", BIOME_SECTION_COLORS.minibosses, children)
 end
 
 local function BuildBiomeSpecialEntryNode(special)
@@ -401,18 +532,7 @@ local function BuildBiomeSpecialsNode(biomeKey)
         children[#children + 1] = BuildBiomeSpecialEntryNode(special)
     end
 
-    return {
-        type = "collapsible",
-        label = "Special",
-        defaultOpen = true,
-        children = {
-            {
-                type = "vstack",
-                gap = 10,
-                children = children,
-            },
-        },
-    }
+    return WrapBiomeSection("Special", BIOME_SECTION_COLORS.special, children)
 end
 
 local function BuildRewardFieldNode(reward)
@@ -510,18 +630,7 @@ local function BuildBiomeRewardsNode(biomeKey)
         return nil
     end
 
-    return {
-        type = "collapsible",
-        label = "Rewards",
-        defaultOpen = true,
-        children = {
-            {
-                type = "vstack",
-                gap = 10,
-                children = children,
-            },
-        },
-    }
+    return WrapBiomeSection("Rewards", BIOME_SECTION_COLORS.rewards, children)
 end
 
 local function BuildNpcGroupNode(group)
@@ -529,6 +638,7 @@ local function BuildNpcGroupNode(group)
         {
             type = "text",
             text = group.label,
+            color = NPC_GROUP_COLORS[group.actualNPCName] or { 0.90, 0.82, 0.56, 1.0 },
         },
     }
 
@@ -545,13 +655,18 @@ end
 
 local function BuildNpcSettingsNode()
     return {
-        type = "collapsible",
-        label = "Encounter Rules",
-        defaultOpen = true,
+        type = "vstack",
+        gap = 8,
         children = {
+            {
+                type = "text",
+                text = "NPC Rules",
+                color = { 0.70, 0.84, 0.96, 1.0 },
+            },
             {
                 type = "checkbox",
                 label = "Only Allow Forced NPC Encounters",
+                tooltip = "Blocks NPC encounters left on Default. Only Forced entries can appear.",
                 binds = { value = "OnlyAllowForcedEncounters" },
             },
             {
@@ -562,6 +677,7 @@ local function BuildNpcSettingsNode()
             {
                 type = "checkbox",
                 label = "Ignore NPC Max Depth Requirements",
+                tooltip = "Forced NPC encounters can still appear after max depth.",
                 binds = { value = "IgnoreMaxDepth" },
             },
             {
@@ -570,27 +686,18 @@ local function BuildNpcSettingsNode()
                 color = { 0.65, 0.65, 0.65, 1.0 },
             },
             {
-                type = "stepper",
-                label = "Global NPC Spacing",
+                type = "dropdown",
+                label = "Minimum rooms between field NPC encounters",
                 binds = { value = "NPCSpacing" },
-                min = 1,
-                max = 12,
-                valueWidth = 36,
-                valueAlign = "center",
-            },
-            {
-                type = "text",
-                text = "Minimum rooms between field NPC encounters.",
-                color = { 0.65, 0.65, 0.65, 1.0 },
+                values = NPC_SPACING_VALUES,
+                controlWidth = 60,
             },
         },
     }
 end
 
 local function BuildNpcTabNode(region)
-    local npcChildren = {
-        BuildNpcSettingsNode(),
-    }
+    local npcChildren = {}
 
     for _, groupId in ipairs(internal.npcGroups and internal.npcGroups.orderedIds or {}) do
         local group = internal.npcGroups[groupId]
@@ -601,12 +708,25 @@ local function BuildNpcTabNode(region)
             end
         end
         if #regionDefinitions > 0 then
+            if #npcChildren > 0 then
+                npcChildren[#npcChildren + 1] = {
+                    type = "separator",
+                }
+            end
             npcChildren[#npcChildren + 1] = BuildNpcGroupNode({
                 label = group.label,
+                actualNPCName = group.actualNPCName,
                 definitions = regionDefinitions,
             })
         end
     end
+
+    if #npcChildren > 0 then
+        npcChildren[#npcChildren + 1] = {
+            type = "separator",
+        }
+    end
+    npcChildren[#npcChildren + 1] = BuildNpcSettingsNode()
 
     return {
         type = "vstack",
@@ -618,18 +738,49 @@ end
 
 local function BuildBiomePlaceholderNode(biome)
     if PORTED_ROOM_BIOMES[biome.key] then
-        local children = {
-            BuildBiomeRoomsNode(biome.key),
-        }
+        local children = {}
+
+        local roomsNode = BuildBiomeRoomsNode(biome.key)
+        if roomsNode ~= nil then
+            children[#children + 1] = roomsNode
+        end
+
+        local minibossesNode = BuildBiomeMinibossesNode(biome.key)
+        if minibossesNode ~= nil then
+            if #children > 0 then
+                children[#children + 1] = {
+                    type = "separator",
+                }
+            end
+            children[#children + 1] = minibossesNode
+        end
 
         local rewardsNode = BuildBiomeRewardsNode(biome.key)
         if rewardsNode ~= nil then
+            if #children > 0 then
+                children[#children + 1] = {
+                    type = "separator",
+                }
+            end
             children[#children + 1] = rewardsNode
         end
 
         local specialsNode = BuildBiomeSpecialsNode(biome.key)
         if specialsNode ~= nil then
+            if #children > 0 then
+                children[#children + 1] = {
+                    type = "separator",
+                }
+            end
             children[#children + 1] = specialsNode
+        end
+
+        if #children == 0 then
+            children[#children + 1] = {
+                type = "text",
+                text = "This biome has not been ported yet.",
+                color = { 0.65, 0.65, 0.65, 1.0 },
+            }
         end
 
         return {
@@ -645,8 +796,9 @@ local function BuildBiomePlaceholderNode(biome)
         tabLabel = biome.label,
         children = {
             { type = "text", text = biome.label },
-            { type = "text", text = "Biome Control v2 shell", color = { 0.65, 0.65, 0.65, 1.0 } },
-            { type = "text", text = "This biome has not been ported yet.", color = { 0.65, 0.65, 0.65, 1.0 } },
+            { type = "text", text = "Summit is sad.", color = { 0.65, 0.65, 0.65, 1.0 } },
+            { type = "text", text = "Nothing to see here.", color = { 0.65, 0.65, 0.65, 1.0 } },
+
         },
     }
 end
@@ -663,6 +815,7 @@ local function BuildRegionTabsNode(region)
     return {
         type = "vstack",
         tabLabel = region,
+        tabId = region,
         gap = 8,
         children = {
             {
@@ -683,93 +836,87 @@ local function BuildSettingsTabNode()
         gap = 10,
         children = {
             {
-                type = "collapsible",
-                label = "Route Reward Priorities",
-                defaultOpen = true,
+                type = "text",
+                text = "Route Reward Priorities",
+                color = { 0.90, 0.82, 0.56, 1.0 },
+            },
+            {
+                type = "checkbox",
+                label = "Choose First Boon in Each Biome",
+                binds = { value = "PrioritizeSpecificRewardEnabled" },
+            },
+            {
+                type = "vstack",
+                gap = 8,
+                visibleIf = { alias = "PrioritizeSpecificRewardEnabled", value = true },
                 children = {
                     {
-                        type = "checkbox",
-                        label = "Choose First Boon in Each Biome",
-                        binds = { value = "PrioritizeSpecificRewardEnabled" },
+                        type = "dropdown",
+                        label = "Route Biome 1 Priority",
+                        binds = { value = "PriorityBiome1" },
+                        values = internal.priorityOptions,
+                        displayValues = internal.priorityDisplayValues,
+                        controlWidth = 180,
                     },
                     {
-                        type = "text",
-                        text = "(Uses route order: Biome 1 through Biome 4)",
-                        color = { 0.65, 0.65, 0.65, 1.0 },
+                        type = "dropdown",
+                        label = "Route Biome 2 Priority",
+                        binds = { value = "PriorityBiome2" },
+                        values = internal.priorityOptions,
+                        displayValues = internal.priorityDisplayValues,
+                        controlWidth = 180,
                     },
                     {
-                        type = "vstack",
-                        gap = 8,
-                        visibleIf = { alias = "PrioritizeSpecificRewardEnabled", value = true },
-                        children = {
-                            {
-                                type = "dropdown",
-                                label = "Route Biome 1 Priority",
-                                binds = { value = "PriorityBiome1" },
-                                values = internal.priorityOptions,
-                                displayValues = internal.priorityDisplayValues,
-                                controlWidth = 180,
-                            },
-                            {
-                                type = "dropdown",
-                                label = "Route Biome 2 Priority",
-                                binds = { value = "PriorityBiome2" },
-                                values = internal.priorityOptions,
-                                displayValues = internal.priorityDisplayValues,
-                                controlWidth = 180,
-                            },
-                            {
-                                type = "dropdown",
-                                label = "Route Biome 3 Priority",
-                                binds = { value = "PriorityBiome3" },
-                                values = internal.priorityOptions,
-                                displayValues = internal.priorityDisplayValues,
-                                controlWidth = 180,
-                            },
-                            {
-                                type = "dropdown",
-                                label = "Route Biome 4 Priority",
-                                binds = { value = "PriorityBiome4" },
-                                values = internal.priorityOptions,
-                                displayValues = internal.priorityDisplayValues,
-                                controlWidth = 180,
-                            },
-                        },
+                        type = "dropdown",
+                        label = "Route Biome 3 Priority",
+                        binds = { value = "PriorityBiome3" },
+                        values = internal.priorityOptions,
+                        displayValues = internal.priorityDisplayValues,
+                        controlWidth = 180,
+                    },
+                    {
+                        type = "dropdown",
+                        label = "Route Biome 4 Priority",
+                        binds = { value = "PriorityBiome4" },
+                        values = internal.priorityOptions,
+                        displayValues = internal.priorityDisplayValues,
+                        controlWidth = 180,
                     },
                 },
             },
             {
-                type = "collapsible",
-                label = "Trial Reward Priorities",
-                defaultOpen = true,
+                type = "separator",
+            },
+            {
+                type = "text",
+                text = "Trial Reward Priorities",
+                color = { 0.70, 0.84, 0.96, 1.0 },
+            },
+            {
+                type = "checkbox",
+                label = "Choose Boon Priorities in Trial Rooms",
+                binds = { value = "PrioritizeTrialRewardEnabled" },
+            },
+            {
+                type = "vstack",
+                gap = 8,
+                visibleIf = { alias = "PrioritizeTrialRewardEnabled", value = true },
                 children = {
                     {
-                        type = "checkbox",
-                        label = "Choose Boon Priorities in Trial Rooms",
-                        binds = { value = "PrioritizeTrialRewardEnabled" },
+                        type = "dropdown",
+                        label = "Trial Priority A",
+                        binds = { value = "PriorityTrial1" },
+                        values = internal.priorityOptions,
+                        displayValues = internal.priorityDisplayValues,
+                        controlWidth = 180,
                     },
                     {
-                        type = "vstack",
-                        gap = 8,
-                        visibleIf = { alias = "PrioritizeTrialRewardEnabled", value = true },
-                        children = {
-                            {
-                                type = "dropdown",
-                                label = "Trial Priority A",
-                                binds = { value = "PriorityTrial1" },
-                                values = internal.priorityOptions,
-                                displayValues = internal.priorityDisplayValues,
-                                controlWidth = 180,
-                            },
-                            {
-                                type = "dropdown",
-                                label = "Trial Priority B",
-                                binds = { value = "PriorityTrial2" },
-                                values = internal.priorityOptions,
-                                displayValues = internal.priorityDisplayValues,
-                                controlWidth = 180,
-                            },
-                        },
+                        type = "dropdown",
+                        label = "Trial Priority B",
+                        binds = { value = "PriorityTrial2" },
+                        values = internal.priorityOptions,
+                        displayValues = internal.priorityDisplayValues,
+                        controlWidth = 180,
                     },
                 },
             },
@@ -783,10 +930,6 @@ function internal.BuildUiV2DefinitionUi()
             type = "vstack",
             children = {
                 {
-                    type = "text",
-                    text = "Configure biome rooms, assist NPC encounters, rewards, and biome-specific tweaks.",
-                },
-                {
                     type = "tabs",
                     id = "BiomeControlRootTabs",
                     children = {
@@ -798,6 +941,87 @@ function internal.BuildUiV2DefinitionUi()
             },
         },
     }
+end
+
+function internal.GetUiV2RootNode()
+    if internal.uiV2RootNode then
+        return internal.uiV2RootNode
+    end
+
+    local root = internal.definition
+        and type(internal.definition.ui) == "table"
+        and internal.definition.ui[1]
+        or nil
+    if type(root) ~= "table" then
+        return nil
+    end
+
+    lib.ui.prepareNode(
+        root,
+        UI_V2_ROOT_CACHE_KEY,
+        internal.definition.storage,
+        internal.definition.customTypes)
+    internal.uiV2RootNode = root
+    return internal.uiV2RootNode
+end
+
+function internal.DrawTab(ui, uiState)
+    local rootNode = internal.GetUiV2RootNode()
+    if not rootNode then
+        return false
+    end
+    return lib.ui.drawNode(ui, rootNode, uiState, nil, internal.definition.customTypes)
+end
+
+local function NormalizeRangePair(uiState, minAlias, maxAlias)
+    if not uiState or type(uiState.set) ~= "function" or type(uiState.view) ~= "table" then
+        return false
+    end
+
+    local minValue = tonumber(uiState.view[minAlias])
+    local maxValue = tonumber(uiState.view[maxAlias])
+    if minValue == nil or maxValue == nil or minValue <= maxValue then
+        return false
+    end
+
+    uiState.set(maxAlias, minValue)
+    return true
+end
+
+function internal.AfterDrawTab(_, uiState)
+    local seen = {}
+
+    local function Clamp(minAlias, maxAlias)
+        if type(minAlias) ~= "string" or minAlias == "" or type(maxAlias) ~= "string" or maxAlias == "" then
+            return
+        end
+        local key = minAlias .. "|" .. maxAlias
+        if seen[key] then
+            return
+        end
+        seen[key] = true
+        NormalizeRangePair(uiState, minAlias, maxAlias)
+    end
+
+    for _, def in ipairs(internal.roomDefinitions or {}) do
+        Clamp(def.configKeyMin, def.configKeyMax)
+    end
+
+    for _, def in ipairs(internal.npcDefinitions or {}) do
+        Clamp(def.configKeyMin, def.configKeyMax)
+    end
+
+    for _, field in ipairs(internal.specialRangeFields or {}) do
+        Clamp(field.configKeyMin, field.configKeyMax)
+    end
+
+    for _, entries in pairs(internal.biomeRoomEntries or {}) do
+        for _, entry in ipairs(entries or {}) do
+            if type(entry.rangeConfigKeys) == "table" then
+                Clamp(entry.rangeConfigKeys.min, entry.rangeConfigKeys.max)
+            end
+        end
+    end
 end
 
 function internal.DrawQuickContent(ui, theme)

@@ -31,6 +31,7 @@ public.definition = {
     affectsRunData = true,
 }
 definition = public.definition
+internal.definition = public.definition
 
 internal.DEFAULT_FIELD_MEDIUM = 0.4
 internal.REGION_UNDERWORLD = 1
@@ -165,7 +166,7 @@ local uiNodes = {
     { type = "dropdown", label = "Route Biome 4 Priority", binds = { value = "PriorityBiome4" }, values = internal.priorityOptions, displayValues = internal.priorityDisplayValues },
     { type = "dropdown", label = "Trial Priority A",       binds = { value = "PriorityTrial1" }, values = internal.priorityOptions, displayValues = internal.priorityDisplayValues },
     { type = "dropdown", label = "Trial Priority B",       binds = { value = "PriorityTrial2" }, values = internal.priorityOptions, displayValues = internal.priorityDisplayValues },
-    { type = "stepper",  label = "Global NPC Spacing",     binds = { value = "NPCSpacing"     }, min = 1, max = 12 },
+    { type = "dropdown", label = "Global NPC Spacing",     binds = { value = "NPCSpacing"     }, values = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 } },
 }
 
 for _, field in ipairs(internal.specialStateFields) do
@@ -230,7 +231,8 @@ local function registerHooks()
     if internal.RegisterHooks then
         internal.RegisterHooks()
     end
-    public.DrawTab = nil
+    public.DrawTab = internal.DrawTab
+    public.AfterDrawTab = internal.AfterDrawTab
     public.DrawQuickContent = internal.DrawQuickContent
 end
 
@@ -258,6 +260,9 @@ local standaloneUi = lib.special.standaloneUI(
         end,
         getDrawTab = function()
             return public.DrawTab
+        end,
+        getAfterDrawTab = function()
+            return public.AfterDrawTab
         end,
     }
 )
