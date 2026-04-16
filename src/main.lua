@@ -19,6 +19,7 @@ local internal = RunDirectorBiomeControl_Internal
 internal.packId = PACK_ID
 
 import("mods/data.lua")
+import("mods/ui_v2.lua")
 
 public.definition = {
     modpack = PACK_ID,
@@ -39,6 +40,7 @@ internal.REGION_OPTIONS = {
     { label = "Surface", value = internal.REGION_SURFACE },
 }
 internal.regionFilter = config.ViewRegion or internal.REGION_UNDERWORLD
+definition.ui = internal.BuildUiV2DefinitionUi()
 
 -- =============================================================================
 -- STORAGE
@@ -61,22 +63,54 @@ definition.storage = {
 
 -- Special state fields registered by biome files
 local STORAGE_TYPE_MAP = { checkbox = "bool", stepper = "int", dropdown = "string", int32 = "int" }
+local PACKED_REWARD_FIELDS = {}
 
-for _, field in ipairs(internal.specialStateFields) do
-    local storageType = STORAGE_TYPE_MAP[field.type] or field.type
-    local default = field.default
-    if default == nil then
-        if storageType == "bool" then default = false
-        elseif storageType == "string" then default = ""
-        else default = field.min or 0
+for _, rewards in pairs(internal.biomeRewards or {}) do
+    for _, reward in ipairs(rewards) do
+        if reward.kind == "packedCheckboxes" and type(reward.configKey) == "string" and reward.configKey ~= "" then
+            PACKED_REWARD_FIELDS[reward.configKey] = reward
         end
     end
+end
+
+for _, field in ipairs(internal.specialStateFields) do
+    if not PACKED_REWARD_FIELDS[field.configKey] then
+        local storageType = STORAGE_TYPE_MAP[field.type] or field.type
+        local default = field.default
+        if default == nil then
+            if storageType == "bool" then default = false
+            elseif storageType == "string" then default = ""
+            else default = field.min or 0
+            end
+        end
+        table.insert(definition.storage, {
+            type      = storageType,
+            configKey = field.configKey,
+            default   = default,
+            min       = field.min,
+            max       = field.max,
+        })
+    end
+end
+
+for configKey, reward in pairs(PACKED_REWARD_FIELDS) do
+    local bits = {}
+    for _, option in ipairs(reward.options or {}) do
+        bits[#bits + 1] = {
+            alias = configKey .. "_" .. tostring(option.name or option.label or option.bit),
+            label = option.label or tostring(option.name or option.bit),
+            type = "bool",
+            offset = option.bit,
+            width = 1,
+            default = false,
+        }
+    end
     table.insert(definition.storage, {
-        type      = storageType,
-        configKey = field.configKey,
-        default   = default,
-        min       = field.min,
-        max       = field.max,
+        type = "packedInt",
+        configKey = configKey,
+        alias = configKey,
+        default = 0,
+        bits = bits,
     })
 end
 
@@ -86,12 +120,9 @@ for _, field in ipairs(internal.specialRangeFields) do
     table.insert(definition.storage, { type = "int", configKey = field.configKeyMax, default = field.max, min = field.min, max = field.max })
 end
 
--- Packed mode storage (room modes and NPC modes)
-for _, configKey in ipairs(internal.packedModeConfigKeys) do
-    table.insert(definition.storage, { type = "int", configKey = configKey, default = 0 })
-end
-for _, configKey in ipairs(internal.packedNPCModeConfigKeys) do
-    table.insert(definition.storage, { type = "int", configKey = configKey, default = 0 })
+-- Mode storage (room modes and NPC modes)
+for _, field in ipairs(internal.modeStorageFields) do
+    table.insert(definition.storage, field)
 end
 
 -- Depth storage nodes: two ints per room/NPC definition
@@ -124,7 +155,7 @@ RunDirectorBiomeControl_Public = public
 -- UI NODE REGISTRIES
 -- Built after createStore so storage aliases are resolved.
 -- Nodes are not in definition.ui — BiomeControl uses custom DrawTab.
--- ui.lua calls lib.ui.drawNode via these lookup tables.
+-- The outer shell now lives in definition.ui via mods/ui_v2.lua.
 -- =============================================================================
 
 local uiNodes = {
@@ -196,11 +227,10 @@ end
 
 local function registerHooks()
     import("mods/logic.lua")
-    import("mods/ui.lua")
     if internal.RegisterHooks then
         internal.RegisterHooks()
     end
-    public.DrawTab = internal.DrawTab
+    public.DrawTab = nil
     public.DrawQuickContent = internal.DrawQuickContent
 end
 

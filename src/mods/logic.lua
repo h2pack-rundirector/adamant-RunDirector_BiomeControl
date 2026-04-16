@@ -29,9 +29,11 @@ function internal.GetRunState()
     for _, groupKey in ipairs(internal.npcGroups.orderedIds or {}) do
         local group = internal.npcGroups[groupKey]
         state.ForcedNPCPending[groupKey] = {}
-        local selectedBiome = internal.GetPackedModeValue(Read, group)
-        if selectedBiome ~= "default" and selectedBiome ~= "disabled" then
-            state.ForcedNPCPending[groupKey][selectedBiome] = true
+        for _, def in ipairs(group.definitions or {}) do
+            local mode = internal.GetPackedModeValue(Read, def)
+            if mode == "forced" then
+                state.ForcedNPCPending[groupKey][def.biome] = true
+            end
         end
     end
 

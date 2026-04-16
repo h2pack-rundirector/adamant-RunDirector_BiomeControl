@@ -22,13 +22,6 @@ end
 
 local roomDefinitions = {}
 local npcDefinitions = {}
-local BITS_PER_PACKED_INT = 32
-local ROOM_MODE_BITS = 2
-local NPC_MODE_BITS = 3
-local ROOM_MODES_PER_PACKED_INT = BITS_PER_PACKED_INT / ROOM_MODE_BITS
-local NPC_MODES_PER_PACKED_INT = math.floor(BITS_PER_PACKED_INT / NPC_MODE_BITS)
-local currentRoomModeSlot = 0
-local currentNPCModeSlot = 0
 
 internal.roomDefinitionSpecs = {}
 internal.npcDefinitionSpecs = {}
@@ -38,9 +31,8 @@ internal.biomeSpecials = {}
 internal.specialStateFields = {}
 internal.specialRangeFields = {}
 internal.biomePatchBuilders = {}
-internal.packedModeConfigKeys = {}
-internal.packedNPCModeConfigKeys = {}
 internal.packedModeEntryLookup = {}
+internal.modeStorageFields = {}
 internal.priorityOptions = { "" }
 internal.priorityDisplayValues = { [""] = "None" }
 internal.roomModeValues = { "default", "disabled", "forced" }
@@ -108,22 +100,15 @@ local function PreparePackedMode(entry)
     for index, value in ipairs(entry.modeValues) do
         entry.modeValueLookup[value] = index - 1
     end
-
-    if entry.modeBitWidth == NPC_MODE_BITS then
-        local packedIndex = math.floor(currentNPCModeSlot / NPC_MODES_PER_PACKED_INT) + 1
-        entry.packedModeConfigKey = "PackedBiomeControlNPCMode" .. packedIndex
-        entry.packedModeShift = (currentNPCModeSlot % NPC_MODES_PER_PACKED_INT) * NPC_MODE_BITS
-        currentNPCModeSlot = currentNPCModeSlot + 1
-        internal.packedNPCModeConfigKeys[entry.packedModeConfigKey] = true
-    else
-        local packedIndex = math.floor(currentRoomModeSlot / ROOM_MODES_PER_PACKED_INT) + 1
-        entry.packedModeConfigKey = "PackedBiomeControlMode" .. packedIndex
-        entry.packedModeShift = (currentRoomModeSlot % ROOM_MODES_PER_PACKED_INT) * ROOM_MODE_BITS
-        currentRoomModeSlot = currentRoomModeSlot + 1
-        internal.packedModeConfigKeys[entry.packedModeConfigKey] = true
-    end
-    entry.packedModeMask = bit32.lshift(bit32.rshift(0xFFFFFFFF, 32 - entry.modeBitWidth), entry.packedModeShift)
     internal.packedModeEntryLookup[entry.modeKey] = entry
+    table.insert(internal.modeStorageFields, {
+        type = "int",
+        alias = entry.modeKey,
+        configKey = entry.modeKey,
+        default = entry.modeValueLookup[entry.defaultMode] or 0,
+        min = 0,
+        max = math.max(#entry.modeValues - 1, 0),
+    })
 end
 
 local function ResolveModeEntry(entryOrKey)
@@ -137,9 +122,8 @@ function internal.GetPackedModeValue(readFn, entryOrKey)
     local entry = ResolveModeEntry(entryOrKey)
     if not entry then return "default" end
 
-    local packed = readFn(entry.packedModeConfigKey) or 0
-    local valueMask = bit32.rshift(0xFFFFFFFF, 32 - entry.modeBitWidth)
-    local encoded = bit32.band(bit32.rshift(packed, entry.packedModeShift), valueMask)
+    local encoded = readFn(entry.modeKey)
+    encoded = math.floor(tonumber(encoded) or 0)
     return entry.modeValues[encoded + 1] or entry.defaultMode
 end
 
@@ -152,12 +136,7 @@ function internal.SetPackedModeValue(uiState, entryOrKey, value)
         encoded = entry.modeValueLookup[entry.defaultMode] or 0
     end
 
-    local packed = uiState.get(entry.packedModeConfigKey) or 0
-    local nextPacked = bit32.band(packed, bit32.bnot(entry.packedModeMask))
-    nextPacked = bit32.bor(nextPacked, bit32.lshift(encoded, entry.packedModeShift))
-    if nextPacked ~= packed then
-        uiState.set(entry.packedModeConfigKey, nextPacked)
-    end
+    uiState.set(entry.modeKey, encoded)
 end
 
 function internal.GetPackedModeDisplay(entryOrKey, value)
@@ -215,7 +194,6 @@ local function DefineRoomControl(data)
     entry.configKeyMin = entry.configKeyMin or ("Packed" .. entry.type .. keyIdentifier .. "Min")
     entry.configKeyMax = entry.configKeyMax or ("Packed" .. entry.type .. keyIdentifier .. "Max")
     entry.modeKey = entry.modeKey or ("Mode" .. entry.type .. keyIdentifier)
-    entry.modeBitWidth = ROOM_MODE_BITS
     PreparePackedMode(entry)
 
     table.insert(roomDefinitions, entry)
@@ -231,6 +209,11 @@ local function DefineNPCControl(data)
     entry.groupKey = entry.groupKey or entry.id
     entry.configKeyMin = entry.configKeyMin or ("PackedNPC" .. entry.id .. regionName .. "Min")
     entry.configKeyMax = entry.configKeyMax or ("PackedNPC" .. entry.id .. regionName .. "Max")
+    entry.modeKey = entry.modeKey or ("ModeNPC" .. entry.id .. regionName)
+    entry.modeValues = entry.modeValues or internal.roomModeValues
+    entry.modeDisplayValues = entry.modeDisplayValues or internal.roomModeDisplayValues
+    entry.defaultMode = entry.defaultMode or "default"
+    PreparePackedMode(entry)
     table.insert(npcDefinitions, entry)
 end
 
@@ -262,7 +245,6 @@ for _, entries in pairs(internal.biomeRoomEntries) do
     for _, entry in ipairs(entries) do
         if entry.kind == "modeField" then
             entry.modeKey = entry.modeKey or entry.configKey or entry.label
-            entry.modeBitWidth = ROOM_MODE_BITS
             PreparePackedMode(entry)
         end
     end
@@ -295,13 +277,6 @@ for _, def in ipairs(npcDefinitions) do
             region = def.region,
             definitions = {},
             lookup = {},
-            modeKey = "ModeNPC" .. def.groupKey,
-            modeValues = { "default", "disabled" },
-            modeDisplayValues = {
-                default = "Default",
-                disabled = "Disabled",
-            },
-            defaultMode = "default",
         }
         table.insert(internal.npcGroups.orderedIds, def.groupKey)
     end
@@ -314,28 +289,5 @@ for _, npcId in ipairs(internal.npcGroups.orderedIds) do
     table.sort(group.definitions, function(a, b)
         return a.biome < b.biome
     end)
-    for _, def in ipairs(group.definitions) do
-        table.insert(group.modeValues, def.biome)
-        group.modeDisplayValues[def.biome] = def.region
-    end
-    group.modeBitWidth = NPC_MODE_BITS
-    PreparePackedMode(group)
 end
 
-do
-    local ordered = {}
-    for configKey in pairs(internal.packedModeConfigKeys) do
-        table.insert(ordered, configKey)
-    end
-    table.sort(ordered)
-    internal.packedModeConfigKeys = ordered
-end
-
-do
-    local ordered = {}
-    for configKey in pairs(internal.packedNPCModeConfigKeys) do
-        table.insert(ordered, configKey)
-    end
-    table.sort(ordered)
-    internal.packedNPCModeConfigKeys = ordered
-end

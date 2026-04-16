@@ -81,15 +81,13 @@ function internal.RegisterNPCHooks()
                     for _, npcName in ipairs(npcPriorityList) do
                         if encounterName:find(npcName, 1, true) then
                             local def = npcLookup[npcName] and npcLookup[npcName][currentRoomSet]
-                            local mode
                             if def then
-                                local group = internal.npcGroups[def.groupKey]
                                 local perPending = pending[def.groupKey]
-                                mode = internal.GetPackedModeValue(Read, group)
+                                local mode = internal.GetPackedModeValue(Read, def)
                                 local minValue, maxValue = GetCurrentNPCRange(def)
                                 if mode == "disabled" then
                                     restricted = true
-                                elseif mode ~= currentRoomSet then
+                                elseif mode ~= "forced" then
                                     restricted = true
                                 elseif not (perPending and currentRoomSet and perPending[currentRoomSet]) then
                                     restricted = true
