@@ -49,7 +49,7 @@ local function DrawRangeDropdowns(imgui, uiState, minAlias, maxAlias, minValue, 
 
     lib.widgets.text(imgui, "from:", { alignToFramePadding = true })
     imgui.SameLine()
-    lib.widgets.dropdown(imgui, uiState, minAlias, {
+    local minChanged = lib.widgets.dropdown(imgui, uiState, minAlias, {
         label = "",
         values = values,
         controlWidth = 60,
@@ -58,11 +58,21 @@ local function DrawRangeDropdowns(imgui, uiState, minAlias, maxAlias, minValue, 
     imgui.SameLine()
     lib.widgets.text(imgui, "to", { alignToFramePadding = true })
     imgui.SameLine()
-    lib.widgets.dropdown(imgui, uiState, maxAlias, {
+    local maxChanged = lib.widgets.dropdown(imgui, uiState, maxAlias, {
         label = "",
         values = values,
         controlWidth = 60,
     })
+
+    local currentMin = tonumber(uiState.view[minAlias]) or minValue
+    local currentMax = tonumber(uiState.view[maxAlias]) or maxValue
+    if currentMin > currentMax then
+        if minChanged and not maxChanged then
+            uiState.set(maxAlias, currentMin)
+        else
+            uiState.set(minAlias, currentMax)
+        end
+    end
 end
 internal.DrawRangeDropdowns = DrawRangeDropdowns
 
