@@ -59,4 +59,14 @@ function internal.DrawSettingsTab(imgui, uiState)
             controlWidth = 180,
         })
     end
+
+    imgui.Spacing()
+    lib.widgets.separator(imgui)
+    imgui.Spacing()
+    lib.widgets.confirmButton(imgui, "biome_control_reset_all_settings", "Reset All Controls", {
+        confirmLabel = "Confirm Reset All",
+        onConfirm = function()
+            internal.ResetAllControls(uiState)
+        end,
+    })
 end

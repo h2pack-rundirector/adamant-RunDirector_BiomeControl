@@ -14,6 +14,42 @@ local function DrawSectionHeading(imgui, text, color)
 end
 internal.DrawSectionHeading = DrawSectionHeading
 
+local function GetResettableAliases()
+    if internal.resettableAliases then
+        return internal.resettableAliases
+    end
+
+    local aliases = {}
+    for _, node in ipairs(lib.storage.getRoots(definition.storage) or {}) do
+        if node.alias ~= "ViewRegion" then
+            aliases[#aliases + 1] = node.alias
+        end
+    end
+
+    internal.resettableAliases = aliases
+    return aliases
+end
+
+function internal.ResetAllControls(uiState)
+    if not uiState then
+        return false
+    end
+
+    local changed = false
+    for _, alias in ipairs(GetResettableAliases()) do
+        local node = uiState.getAliasNode and uiState.getAliasNode(alias) or nil
+        local current = uiState.view and uiState.view[alias] or nil
+        local default = node and node.default or nil
+
+        if not lib.storage.valuesEqual(node, current, default) then
+            uiState.reset(alias)
+            changed = true
+        end
+    end
+
+    return changed
+end
+
 local function BuildRegionTabList(region)
     local tabs = {
         { key = "NPCs", label = "NPCs" },
@@ -216,9 +252,16 @@ function internal.DrawTab(imgui, uiState)
     return false
 end
 
-function internal.DrawQuickContent(imgui)
+function internal.DrawQuickContent(imgui, uiState)
     lib.widgets.text(imgui, "Biome Control")
     lib.widgets.text(imgui, "Lean UI shell active", {
         color = { 0.65, 0.65, 0.65, 1.0 },
+    })
+    imgui.Spacing()
+    lib.widgets.confirmButton(imgui, "biome_control_quick_reset_all", "Reset All Controls", {
+        confirmLabel = "Confirm Reset All",
+        onConfirm = function()
+            internal.ResetAllControls(uiState)
+        end,
     })
 end
