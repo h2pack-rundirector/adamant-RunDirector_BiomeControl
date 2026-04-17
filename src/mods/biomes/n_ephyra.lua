@@ -221,12 +221,15 @@ end)
 
 local function DrawEphyraStoryRow(imgui, uiState)
     local dropdownColumnX = 160
-    local modeValues = { 0, 1, 2 }
-    local modeDisplayValues = {
-        [0] = "Default",
-        [1] = "Disabled",
-        [2] = "Forced",
-    }
+    local entry = internal.modeEntryLookup.EphyraStoryMode
+    local modeValues = {}
+    local modeDisplayValues = {}
+
+    for index, value in ipairs(entry and entry.modeValues or {}) do
+        local encoded = index - 1
+        modeValues[#modeValues + 1] = encoded
+        modeDisplayValues[encoded] = entry.modeDisplayValues[value] or tostring(value)
+    end
 
     imgui.AlignTextToFramePadding()
     imgui.Text("Story")
@@ -247,13 +250,15 @@ end
 
 local function DrawEphyraMinibossRow(imgui, uiState)
     local dropdownColumnX = 160
-    local modeValues = { 0, 1, 2, 3 }
-    local modeDisplayValues = {
-        [0] = "Default",
-        [1] = "Force Satyr Champion",
-        [2] = "Force Erymanthian Boar",
-        [3] = "Disable Both",
-    }
+    local entry = internal.modeEntryLookup.EphyraMiniBossMode
+    local modeValues = {}
+    local modeDisplayValues = {}
+
+    for index, value in ipairs(entry and entry.modeValues or {}) do
+        local encoded = index - 1
+        modeValues[#modeValues + 1] = encoded
+        modeDisplayValues[encoded] = entry.modeDisplayValues[value] or tostring(value)
+    end
 
     imgui.AlignTextToFramePadding()
     imgui.Text("Miniboss")

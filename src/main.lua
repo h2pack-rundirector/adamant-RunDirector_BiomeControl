@@ -29,7 +29,6 @@ public.definition = {
     name = "Biome Control",
     tooltip = "Control biome rooms, NPC encounters, rewards, and biome-specific tweaks.",
     default = dataDefaults.Enabled,
-    special = true,
     affectsRunData = true,
 }
 definition = public.definition
@@ -193,7 +192,7 @@ modutil.once_loaded.game(function()
     loader.load(init, init)
 end)
 
-local standaloneUi = lib.special.standaloneUI(
+local standaloneUi = lib.host.standaloneUI(
     public.definition,
     store,
     store.uiState,
