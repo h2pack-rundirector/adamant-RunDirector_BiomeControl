@@ -32,3 +32,20 @@ internal.registerPatchBuilder(function(plan, read)
         end
     end
 end)
+
+function internal.DrawBiomeTab_Fields(imgui, uiState)
+    internal.DrawSectionHeading(imgui, "Minibosses", { 0.88, 0.38, 0.32, 1.0 })
+    internal.DrawRoomRow(imgui, uiState, internal.GetRoomDef("Vampire", "H"))
+    internal.DrawRoomRow(imgui, uiState, internal.GetRoomDef("Lamia", "H"))
+
+    imgui.Spacing()
+    internal.DrawSectionHeading(imgui, "Special", { 1.0, 0.60, 0.28, 1.0 })
+    lib.widgets.checkbox(imgui, uiState, "PreventEchoScam", {
+        label = "Prevent Echo Scam",
+    })
+    lib.widgets.text(imgui,
+        "(Prevent miniboss from spawning in same depth as Echo, which can prevent it from spawning at all)",
+        {
+            color = { 0.65, 0.65, 0.65, 1.0 },
+        })
+end

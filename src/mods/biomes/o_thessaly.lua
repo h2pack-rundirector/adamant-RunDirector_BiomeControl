@@ -119,3 +119,58 @@ internal.registerPatchBuilder(function(plan, read, log)
         log("Forced Thessaly The Yargonaut miniboss")
     end
 end)
+
+local function DrawThessalyMinibossRow(imgui, uiState)
+    local dropdownColumnX = 160
+    local rangeColumnX = 340
+    local modeValues = { 0, 1, 2, 3 }
+    local modeDisplayValues = {
+        [0] = "Default",
+        [1] = "Force Charybdis",
+        [2] = "Force The Yargonaut",
+        [3] = "Disable Both",
+    }
+
+    imgui.AlignTextToFramePadding()
+    imgui.Text("Miniboss")
+    imgui.SameLine()
+    imgui.SetCursorPosX(dropdownColumnX)
+    lib.widgets.dropdown(imgui, uiState, "ThessalyMiniBossMode", {
+        label = "",
+        values = modeValues,
+        displayValues = modeDisplayValues,
+        controlWidth = 180,
+    })
+
+    local mode = uiState.view["ThessalyMiniBossMode"]
+    if mode == 1 or mode == 2 then
+        imgui.SameLine()
+        imgui.SetCursorPosX(rangeColumnX)
+        internal.DrawRangeDropdowns(
+            imgui,
+            uiState,
+            "PackedForcedThessalyMiniBossMin",
+            "PackedForcedThessalyMiniBossMax",
+            3,
+            5
+        )
+    end
+
+    lib.widgets.text(imgui,
+        "(Default lets the game decide, Forced selects one miniboss, Disabled suppresses both)",
+        {
+            color = { 0.65, 0.65, 0.65, 1.0 },
+        })
+end
+
+function internal.DrawBiomeTab_Thessaly(imgui, uiState)
+    internal.DrawSectionHeading(imgui, "Rooms", { 0.90, 0.82, 0.56, 1.0 })
+    internal.DrawRoomRow(imgui, uiState, internal.GetRoomDef("Circe", "O"))
+    internal.DrawRoomRow(imgui, uiState, internal.GetRoomDef("Trial", "O"))
+    internal.DrawRoomRow(imgui, uiState, internal.GetRoomDef("Fountain", "O"))
+    internal.DrawRoomRow(imgui, uiState, internal.GetRoomDef("Shop", "O"))
+
+    imgui.Spacing()
+    internal.DrawSectionHeading(imgui, "Minibosses", { 0.88, 0.38, 0.32, 1.0 })
+    DrawThessalyMinibossRow(imgui, uiState)
+end

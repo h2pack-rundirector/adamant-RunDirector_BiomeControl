@@ -218,3 +218,101 @@ internal.registerPatchBuilder(function(plan, read, log)
 
     log("Applied Ephyra subroom reward bans")
 end)
+
+local function DrawEphyraStoryRow(imgui, uiState)
+    local dropdownColumnX = 160
+    local modeValues = { 0, 1, 2 }
+    local modeDisplayValues = {
+        [0] = "Default",
+        [1] = "Disabled",
+        [2] = "Forced",
+    }
+
+    imgui.AlignTextToFramePadding()
+    imgui.Text("Story")
+    imgui.SameLine()
+    imgui.SetCursorPosX(dropdownColumnX)
+    lib.widgets.dropdown(imgui, uiState, "EphyraStoryMode", {
+        label = "",
+        values = modeValues,
+        displayValues = modeDisplayValues,
+        controlWidth = 140,
+    })
+    lib.widgets.text(imgui,
+        "(Default lets the game decide, Forced guarantees Medea when normally eligible, Disabled suppresses it)",
+        {
+            color = { 0.65, 0.65, 0.65, 1.0 },
+        })
+end
+
+local function DrawEphyraMinibossRow(imgui, uiState)
+    local dropdownColumnX = 160
+    local modeValues = { 0, 1, 2, 3 }
+    local modeDisplayValues = {
+        [0] = "Default",
+        [1] = "Force Satyr Champion",
+        [2] = "Force Erymanthian Boar",
+        [3] = "Disable Both",
+    }
+
+    imgui.AlignTextToFramePadding()
+    imgui.Text("Miniboss")
+    imgui.SameLine()
+    imgui.SetCursorPosX(dropdownColumnX)
+    lib.widgets.dropdown(imgui, uiState, "EphyraMiniBossMode", {
+        label = "",
+        values = modeValues,
+        displayValues = modeDisplayValues,
+        controlWidth = 180,
+    })
+    lib.widgets.text(imgui,
+        "(Choose which Ephyra miniboss can appear, or disable both)",
+        {
+            color = { 0.65, 0.65, 0.65, 1.0 },
+        })
+end
+
+local function DrawEphyraRewards(imgui, uiState, store)
+    internal.DrawSectionHeading(imgui, "Rewards", { 0.70, 0.84, 0.96, 1.0 })
+    lib.widgets.dropdown(imgui, uiState, "ReplaceHermesInEphyra", {
+        label = "Hub Hermes Replacement",
+        values = internal.hubRewardReplacementOptions,
+        displayValues = internal.hubRewardReplacementDisplayValues,
+        controlWidth = 180,
+    })
+    lib.widgets.text(imgui,
+        "(Replace the Hermes slot in Ephyra HubRewards with another god or remove it)",
+        {
+            color = { 0.65, 0.65, 0.65, 1.0 },
+        })
+
+    imgui.Spacing()
+    lib.widgets.text(imgui, "SubRoomRewards")
+    lib.widgets.packedCheckboxList(imgui, uiState, "PackedBannedEphyraSubRoomRewards", store, {})
+    lib.widgets.text(imgui,
+        "(Checked rewards are banned from normal Ephyra subroom reward pools)",
+        {
+            color = { 0.65, 0.65, 0.65, 1.0 },
+        })
+
+    imgui.Spacing()
+    lib.widgets.text(imgui, "SubRoomRewardsHard")
+    lib.widgets.packedCheckboxList(imgui, uiState, "PackedBannedEphyraSubRoomRewardsHard", store, {})
+    lib.widgets.text(imgui,
+        "(Checked rewards are banned from hard Ephyra subroom reward pools)",
+        {
+            color = { 0.65, 0.65, 0.65, 1.0 },
+        })
+end
+
+function internal.DrawBiomeTab_Ephyra(imgui, uiState, store)
+    internal.DrawSectionHeading(imgui, "Rooms", { 0.90, 0.82, 0.56, 1.0 })
+    DrawEphyraStoryRow(imgui, uiState)
+
+    imgui.Spacing()
+    internal.DrawSectionHeading(imgui, "Minibosses", { 0.88, 0.38, 0.32, 1.0 })
+    DrawEphyraMinibossRow(imgui, uiState)
+
+    imgui.Spacing()
+    DrawEphyraRewards(imgui, uiState, store)
+end

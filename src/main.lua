@@ -19,7 +19,9 @@ local internal = RunDirectorBiomeControl_Internal
 internal.packId = PACK_ID
 
 import("mods/data.lua")
-import("mods/ui_v2.lua")
+import("mods/ui_settings.lua")
+import("mods/ui_npc.lua")
+import("mods/ui_lean.lua")
 
 public.definition = {
     modpack = PACK_ID,
@@ -41,7 +43,6 @@ internal.REGION_OPTIONS = {
     { label = "Surface", value = internal.REGION_SURFACE },
 }
 internal.regionFilter = config.ViewRegion or internal.REGION_UNDERWORLD
-definition.ui = internal.BuildUiV2DefinitionUi()
 
 -- =============================================================================
 -- STORAGE
@@ -154,7 +155,7 @@ RunDirectorBiomeControl_Public = public
 
 -- =============================================================================
 -- UI
--- The v2 declarative shell is the active UI path via definition.ui.
+-- The lean immediate-mode shell is the active UI path on this branch.
 -- =============================================================================
 
 
@@ -197,9 +198,6 @@ local standaloneUi = lib.special.standaloneUI(
     store,
     store.uiState,
     {
-        getDrawQuickContent = function()
-            return public.DrawQuickContent
-        end,
         getDrawTab = function()
             return public.DrawTab
         end,
