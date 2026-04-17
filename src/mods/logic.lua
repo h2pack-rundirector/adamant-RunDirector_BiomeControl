@@ -30,7 +30,7 @@ function internal.GetRunState()
         local group = internal.npcGroups[groupKey]
         state.ForcedNPCPending[groupKey] = {}
         for _, def in ipairs(group.definitions or {}) do
-            local mode = internal.GetPackedModeValue(Read, def)
+            local mode = internal.GetModeValue(Read, def)
             if mode == "forced" then
                 state.ForcedNPCPending[groupKey][def.biome] = true
             end

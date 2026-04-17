@@ -180,7 +180,7 @@ internal.registerPatchBuilder(function(plan, read, log)
 end)
 
 internal.registerPatchBuilder(function(plan, read, log)
-    local storyMode = internal.GetPackedModeValue(read, "EphyraStoryMode")
+    local storyMode = internal.GetModeValue(read, "EphyraStoryMode")
     if storyMode == "forced" and RoomData and RoomData.N_Story01 then
         plan:setMany(RoomData.N_Story01, { AlwaysForce = true })
         log("Forced Ephyra story room when eligible")
@@ -189,7 +189,7 @@ internal.registerPatchBuilder(function(plan, read, log)
         log("Disabled Ephyra story room")
     end
 
-    local minibossMode = internal.GetPackedModeValue(read, "EphyraMiniBossMode")
+    local minibossMode = internal.GetModeValue(read, "EphyraMiniBossMode")
     if minibossMode == "satyr_crossbow" then
         plan:setMany(RoomData.N_MiniBoss01, { AlwaysForce = true })
         appendImpossibleRequirement(plan, "N_MiniBoss02")

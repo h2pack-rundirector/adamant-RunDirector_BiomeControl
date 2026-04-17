@@ -24,7 +24,7 @@ local function Log(fmt, ...)
 end
 
 local function GetDefinitionMode(def)
-    return internal.GetPackedModeValue(Read, def)
+    return internal.GetModeValue(Read, def)
 end
 
 local function PriorityKeyForBiome(biomeIndex)

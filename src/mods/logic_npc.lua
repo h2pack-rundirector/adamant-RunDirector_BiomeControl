@@ -83,7 +83,7 @@ function internal.RegisterNPCHooks()
                             local def = npcLookup[npcName] and npcLookup[npcName][currentRoomSet]
                             if def then
                                 local perPending = pending[def.groupKey]
-                                local mode = internal.GetPackedModeValue(Read, def)
+                                local mode = internal.GetModeValue(Read, def)
                                 local minValue, maxValue = GetCurrentNPCRange(def)
                                 if mode == "disabled" then
                                     restricted = true

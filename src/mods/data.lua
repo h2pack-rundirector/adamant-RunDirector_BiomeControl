@@ -31,7 +31,7 @@ internal.biomeSpecials = {}
 internal.specialStateFields = {}
 internal.specialRangeFields = {}
 internal.biomePatchBuilders = {}
-internal.packedModeEntryLookup = {}
+internal.modeEntryLookup = {}
 internal.modeStorageFields = {}
 internal.priorityOptions = { "" }
 internal.priorityDisplayValues = { [""] = "None" }
@@ -92,7 +92,7 @@ function internal.registerPatchBuilder(builder)
     table.insert(internal.biomePatchBuilders, builder)
 end
 
-local function PreparePackedMode(entry)
+local function PrepareModeField(entry)
     entry.modeValues = entry.modeValues or internal.roomModeValues
     entry.modeDisplayValues = entry.modeDisplayValues or internal.roomModeDisplayValues
     entry.defaultMode = entry.defaultMode or entry.modeValues[1] or "default"
@@ -100,7 +100,7 @@ local function PreparePackedMode(entry)
     for index, value in ipairs(entry.modeValues) do
         entry.modeValueLookup[value] = index - 1
     end
-    internal.packedModeEntryLookup[entry.modeKey] = entry
+    internal.modeEntryLookup[entry.modeKey] = entry
     table.insert(internal.modeStorageFields, {
         type = "int",
         alias = entry.modeKey,
@@ -115,10 +115,10 @@ local function ResolveModeEntry(entryOrKey)
     if type(entryOrKey) == "table" then
         return entryOrKey
     end
-    return internal.packedModeEntryLookup[entryOrKey]
+    return internal.modeEntryLookup[entryOrKey]
 end
 
-function internal.GetPackedModeValue(readFn, entryOrKey)
+function internal.GetModeValue(readFn, entryOrKey)
     local entry = ResolveModeEntry(entryOrKey)
     if not entry then return "default" end
 
@@ -127,7 +127,7 @@ function internal.GetPackedModeValue(readFn, entryOrKey)
     return entry.modeValues[encoded + 1] or entry.defaultMode
 end
 
-function internal.SetPackedModeValue(uiState, entryOrKey, value)
+function internal.SetModeValue(uiState, entryOrKey, value)
     local entry = ResolveModeEntry(entryOrKey)
     if not entry then return end
 
@@ -139,7 +139,7 @@ function internal.SetPackedModeValue(uiState, entryOrKey, value)
     uiState.set(entry.modeKey, encoded)
 end
 
-function internal.GetPackedModeDisplay(entryOrKey, value)
+function internal.GetModeDisplay(entryOrKey, value)
     local entry = ResolveModeEntry(entryOrKey)
     if not entry then
         return tostring(value)
@@ -194,7 +194,7 @@ local function DefineRoomControl(data)
     entry.configKeyMin = entry.configKeyMin or ("Packed" .. entry.type .. keyIdentifier .. "Min")
     entry.configKeyMax = entry.configKeyMax or ("Packed" .. entry.type .. keyIdentifier .. "Max")
     entry.modeKey = entry.modeKey or ("Mode" .. entry.type .. keyIdentifier)
-    PreparePackedMode(entry)
+    PrepareModeField(entry)
 
     table.insert(roomDefinitions, entry)
 end
@@ -213,7 +213,7 @@ local function DefineNPCControl(data)
     entry.modeValues = entry.modeValues or internal.roomModeValues
     entry.modeDisplayValues = entry.modeDisplayValues or internal.roomModeDisplayValues
     entry.defaultMode = entry.defaultMode or "default"
-    PreparePackedMode(entry)
+    PrepareModeField(entry)
     table.insert(npcDefinitions, entry)
 end
 
@@ -245,7 +245,7 @@ for _, entries in pairs(internal.biomeRoomEntries) do
     for _, entry in ipairs(entries) do
         if entry.kind == "modeField" then
             entry.modeKey = entry.modeKey or entry.configKey or entry.label
-            PreparePackedMode(entry)
+            PrepareModeField(entry)
         end
     end
 end

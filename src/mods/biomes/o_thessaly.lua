@@ -91,7 +91,7 @@ internal.registerBiomeRoom("O", {
 })
 
 internal.registerPatchBuilder(function(plan, read, log)
-    local mode = internal.GetPackedModeValue(read, "ThessalyMiniBossMode")
+    local mode = internal.GetModeValue(read, "ThessalyMiniBossMode")
     if mode == "default" then
         return
     end
