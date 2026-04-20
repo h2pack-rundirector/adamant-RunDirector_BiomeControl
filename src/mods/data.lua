@@ -128,7 +128,7 @@ function internal.GetModeValue(readFn, entryOrKey)
     return entry.modeValues[encoded + 1] or entry.defaultMode
 end
 
-function internal.SetModeValue(uiState, entryOrKey, value)
+function internal.SetModeValue(session, entryOrKey, value)
     local entry = ResolveModeEntry(entryOrKey)
     if not entry then return end
 
@@ -137,7 +137,7 @@ function internal.SetModeValue(uiState, entryOrKey, value)
         encoded = entry.modeValueLookup[entry.defaultMode] or 0
     end
 
-    uiState.set(entry.modeKey, encoded)
+    session.write(entry.modeKey, encoded)
 end
 
 function internal.GetModeDisplay(entryOrKey, value)

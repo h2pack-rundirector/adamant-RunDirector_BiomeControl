@@ -46,19 +46,19 @@ internal.registerPatchBuilder(function(plan, read)
     end
 end)
 
-function internal.DrawBiomeTab_Fields(imgui, uiState)
+function internal.DrawBiomeTab_Fields(imgui, session)
     internal.DrawSectionHeading(imgui, "Minibosses", { 0.88, 0.38, 0.32, 1.0 })
-    internal.DrawRoomRow(imgui, uiState, internal.GetRoomDef("Vampire", "H"))
-    internal.DrawRoomRow(imgui, uiState, internal.GetRoomDef("Lamia", "H"))
+    internal.DrawRoomRow(imgui, session, internal.GetRoomDef("Vampire", "H"))
+    internal.DrawRoomRow(imgui, session, internal.GetRoomDef("Lamia", "H"))
 
     imgui.Spacing()
     internal.DrawSectionHeading(imgui, "Special", { 1.0, 0.60, 0.28, 1.0 })
-    lib.widgets.checkbox(imgui, uiState, "PreventEchoScam", {
+    lib.widgets.checkbox(imgui, session, "PreventEchoScam", {
         label = "Prevent Echo Scam",
     })
 
     imgui.Spacing()
-    lib.widgets.checkbox(imgui, uiState, "ForceTwoRewardFieldsOpeners", {
+    lib.widgets.checkbox(imgui, session, "ForceTwoRewardFieldsOpeners", {
         label = "Force 2-2 Fields",
     })
 end

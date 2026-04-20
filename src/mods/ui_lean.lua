@@ -14,39 +14,10 @@ local function DrawSectionHeading(imgui, text, color)
 end
 internal.DrawSectionHeading = DrawSectionHeading
 
-local function GetResettableAliases()
-    if internal.resettableAliases then
-        return internal.resettableAliases
-    end
-
-    local aliases = {}
-    for _, node in ipairs(lib.storage.getRoots(definition.storage) or {}) do
-        if node.alias ~= "ViewRegion" then
-            aliases[#aliases + 1] = node.alias
-        end
-    end
-
-    internal.resettableAliases = aliases
-    return aliases
-end
-
-function internal.ResetAllControls(uiState)
-    if not uiState then
-        return false
-    end
-
-    local changed = false
-    for _, alias in ipairs(GetResettableAliases()) do
-        local node = uiState.getAliasNode and uiState.getAliasNode(alias) or nil
-        local current = uiState.view and uiState.view[alias] or nil
-        local default = node and node.default or nil
-
-        if not lib.storage.valuesEqual(node, current, default) then
-            uiState.reset(alias)
-            changed = true
-        end
-    end
-
+function internal.ResetAllControls(session)
+    local changed = lib.resetStorageToDefaults(definition.storage, session, {
+        exclude = { ViewRegion = true },
+    })
     return changed
 end
 
@@ -93,12 +64,12 @@ local function BuildEncodedModeOptions(def)
     return values, displayValues
 end
 
-local function DrawRangeDropdowns(imgui, uiState, minAlias, maxAlias, minValue, maxValue)
+local function DrawRangeDropdowns(imgui, session, minAlias, maxAlias, minValue, maxValue)
     local values = BuildIntegerValues(minValue, maxValue)
 
     lib.widgets.text(imgui, "from:", { alignToFramePadding = true })
     imgui.SameLine()
-    local minChanged = lib.widgets.dropdown(imgui, uiState, minAlias, {
+    local minChanged = lib.widgets.dropdown(imgui, session, minAlias, {
         label = "",
         values = values,
         controlWidth = 60,
@@ -107,25 +78,25 @@ local function DrawRangeDropdowns(imgui, uiState, minAlias, maxAlias, minValue, 
     imgui.SameLine()
     lib.widgets.text(imgui, "to", { alignToFramePadding = true })
     imgui.SameLine()
-    local maxChanged = lib.widgets.dropdown(imgui, uiState, maxAlias, {
+    local maxChanged = lib.widgets.dropdown(imgui, session, maxAlias, {
         label = "",
         values = values,
         controlWidth = 60,
     })
 
-    local currentMin = tonumber(uiState.view[minAlias]) or minValue
-    local currentMax = tonumber(uiState.view[maxAlias]) or maxValue
+    local currentMin = tonumber(session.view[minAlias]) or minValue
+    local currentMax = tonumber(session.view[maxAlias]) or maxValue
     if currentMin > currentMax then
         if minChanged and not maxChanged then
-            uiState.set(maxAlias, currentMin)
+            session.write(maxAlias, currentMin)
         else
-            uiState.set(minAlias, currentMax)
+            session.write(minAlias, currentMax)
         end
     end
 end
 internal.DrawRangeDropdowns = DrawRangeDropdowns
 
-local function DrawRoomRow(imgui, uiState, def)
+local function DrawRoomRow(imgui, session, def)
     if not def then
         lib.widgets.text(imgui, "Missing room definition", {
             color = { 0.65, 0.65, 0.65, 1.0 },
@@ -140,7 +111,7 @@ local function DrawRoomRow(imgui, uiState, def)
 
     DrawFixedLabel(imgui, def.label, labelColumnX)
     imgui.SetCursorPosX(dropdownColumnX)
-    lib.widgets.dropdown(imgui, uiState, def.modeKey, {
+    lib.widgets.dropdown(imgui, session, def.modeKey, {
         label = "",
         values = modeValues,
         displayValues = modeDisplayValues,
@@ -148,11 +119,11 @@ local function DrawRoomRow(imgui, uiState, def)
     })
 
     if internal.GetModeValue(function(key)
-        return uiState.view[key]
+        return session.view[key]
     end, def) == "forced" then
         imgui.SameLine()
         imgui.SetCursorPosX(rangeColumnX)
-        DrawRangeDropdowns(imgui, uiState, def.configKeyMin, def.configKeyMax, def.minDefault, def.maxDefault)
+        DrawRangeDropdowns(imgui, session, def.configKeyMin, def.configKeyMax, def.minDefault, def.maxDefault)
     end
 end
 internal.DrawRoomRow = DrawRoomRow
@@ -176,7 +147,7 @@ local function GetRoomDef(id, biome)
 end
 internal.GetRoomDef = GetRoomDef
 
-local function DrawUnderworldTab(imgui, uiState)
+local function DrawUnderworldTab(imgui, session)
     local tabs = BuildRegionTabList(UNDERWORLD_REGION)
     internal.uiLeanState.underworldTab = lib.nav.verticalTabs(imgui, {
         id = "BiomeControlUnderworldTabs",
@@ -187,22 +158,22 @@ local function DrawUnderworldTab(imgui, uiState)
 
     imgui.BeginChild("BiomeControlUnderworldDetail", 0, 0, false)
     if internal.uiLeanState.underworldTab == "NPCs" then
-        internal.DrawRegionNpcs(imgui, uiState, UNDERWORLD_REGION)
+        internal.DrawRegionNpcs(imgui, session, UNDERWORLD_REGION)
     elseif internal.uiLeanState.underworldTab == "F" then
-        internal.DrawBiomeTab_Erebus(imgui, uiState)
+        internal.DrawBiomeTab_Erebus(imgui, session)
     elseif internal.uiLeanState.underworldTab == "G" then
-        internal.DrawBiomeTab_Oceanus(imgui, uiState)
+        internal.DrawBiomeTab_Oceanus(imgui, session)
     elseif internal.uiLeanState.underworldTab == "H" then
-        internal.DrawBiomeTab_Fields(imgui, uiState)
+        internal.DrawBiomeTab_Fields(imgui, session)
     elseif internal.uiLeanState.underworldTab == "I" then
-        internal.DrawBiomeTab_Tartarus(imgui, uiState)
+        internal.DrawBiomeTab_Tartarus(imgui, session)
     else
         DrawRegionPlaceholder(imgui, internal.uiLeanState.underworldTab)
     end
     imgui.EndChild()
 end
 
-local function DrawSurfaceTab(imgui, uiState)
+local function DrawSurfaceTab(imgui, session)
     local tabs = BuildRegionTabList(SURFACE_REGION)
     internal.uiLeanState.surfaceTab = lib.nav.verticalTabs(imgui, {
         id = "BiomeControlSurfaceTabs",
@@ -213,13 +184,13 @@ local function DrawSurfaceTab(imgui, uiState)
 
     imgui.BeginChild("BiomeControlSurfaceDetail", 0, 0, false)
     if internal.uiLeanState.surfaceTab == "NPCs" then
-        internal.DrawRegionNpcs(imgui, uiState, SURFACE_REGION)
+        internal.DrawRegionNpcs(imgui, session, SURFACE_REGION)
     elseif internal.uiLeanState.surfaceTab == "N" then
-        internal.DrawBiomeTab_Ephyra(imgui, uiState, store)
+        internal.DrawBiomeTab_Ephyra(imgui, session, store)
     elseif internal.uiLeanState.surfaceTab == "O" then
-        internal.DrawBiomeTab_Thessaly(imgui, uiState)
+        internal.DrawBiomeTab_Thessaly(imgui, session)
     elseif internal.uiLeanState.surfaceTab == "P" then
-        internal.DrawBiomeTab_Olympus(imgui, uiState)
+        internal.DrawBiomeTab_Olympus(imgui, session)
     elseif internal.uiLeanState.surfaceTab == "Q" then
         internal.DrawBiomeTab_Summit(imgui)
     else
@@ -228,23 +199,23 @@ local function DrawSurfaceTab(imgui, uiState)
     imgui.EndChild()
 end
 
-function internal.DrawTab(imgui, uiState)
+function internal.DrawTab(imgui, session)
     if not imgui.BeginTabBar("BiomeControlLeanTabs") then
         return false
     end
 
     if imgui.BeginTabItem("Underworld") then
-        DrawUnderworldTab(imgui, uiState)
+        DrawUnderworldTab(imgui, session)
         imgui.EndTabItem()
     end
 
     if imgui.BeginTabItem("Surface") then
-        DrawSurfaceTab(imgui, uiState)
+        DrawSurfaceTab(imgui, session)
         imgui.EndTabItem()
     end
 
     if imgui.BeginTabItem("Settings") then
-        internal.DrawSettingsTab(imgui, uiState)
+        internal.DrawSettingsTab(imgui, session)
         imgui.EndTabItem()
     end
 
@@ -252,11 +223,11 @@ function internal.DrawTab(imgui, uiState)
     return false
 end
 
-function internal.DrawQuickContent(imgui, uiState)
+function internal.DrawQuickContent(imgui, session)
     lib.widgets.confirmButton(imgui, "biome_control_quick_reset_all", "Reset To Default", {
         confirmLabel = "Confirm Reset All",
         onConfirm = function()
-            internal.ResetAllControls(uiState)
+            internal.ResetAllControls(session)
         end,
     })
 end

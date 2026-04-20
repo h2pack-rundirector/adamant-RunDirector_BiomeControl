@@ -5,7 +5,7 @@ local function Read(key)
 end
 
 local function IsEnabled()
-    return lib.coordinator.isEnabled(store, internal.packId)
+    return lib.isModuleEnabled(store, internal.packId)
 end
 
 internal.BiomeControlRead = Read
@@ -60,3 +60,4 @@ function internal.RegisterHooks()
         internal.RegisterNPCHooks()
     end
 end
+

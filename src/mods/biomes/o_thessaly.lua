@@ -120,7 +120,7 @@ internal.registerPatchBuilder(function(plan, read, log)
     end
 end)
 
-local function DrawThessalyMinibossRow(imgui, uiState)
+local function DrawThessalyMinibossRow(imgui, session)
     local dropdownColumnX = 160
     local rangeColumnGap = 20
     local modeValues = { 0, 1, 2, 3 }
@@ -135,20 +135,20 @@ local function DrawThessalyMinibossRow(imgui, uiState)
     imgui.Text("Miniboss")
     imgui.SameLine()
     imgui.SetCursorPosX(dropdownColumnX)
-    lib.widgets.dropdown(imgui, uiState, "ThessalyMiniBossMode", {
+    lib.widgets.dropdown(imgui, session, "ThessalyMiniBossMode", {
         label = "",
         values = modeValues,
         displayValues = modeDisplayValues,
         controlWidth = 200,
     })
 
-    local mode = uiState.view["ThessalyMiniBossMode"]
+    local mode = session.view["ThessalyMiniBossMode"]
     if mode == 1 or mode == 2 then
         imgui.SameLine()
         imgui.SetCursorPosX(imgui.GetCursorPosX() + rangeColumnGap)
         internal.DrawRangeDropdowns(
             imgui,
-            uiState,
+            session,
             "PackedForcedThessalyMiniBossMin",
             "PackedForcedThessalyMiniBossMax",
             3,
@@ -158,14 +158,14 @@ local function DrawThessalyMinibossRow(imgui, uiState)
 
 end
 
-function internal.DrawBiomeTab_Thessaly(imgui, uiState)
+function internal.DrawBiomeTab_Thessaly(imgui, session)
     internal.DrawSectionHeading(imgui, "Rooms", { 0.90, 0.82, 0.56, 1.0 })
-    internal.DrawRoomRow(imgui, uiState, internal.GetRoomDef("Circe", "O"))
-    internal.DrawRoomRow(imgui, uiState, internal.GetRoomDef("Trial", "O"))
-    internal.DrawRoomRow(imgui, uiState, internal.GetRoomDef("Fountain", "O"))
-    internal.DrawRoomRow(imgui, uiState, internal.GetRoomDef("Shop", "O"))
+    internal.DrawRoomRow(imgui, session, internal.GetRoomDef("Circe", "O"))
+    internal.DrawRoomRow(imgui, session, internal.GetRoomDef("Trial", "O"))
+    internal.DrawRoomRow(imgui, session, internal.GetRoomDef("Fountain", "O"))
+    internal.DrawRoomRow(imgui, session, internal.GetRoomDef("Shop", "O"))
 
     imgui.Spacing()
     internal.DrawSectionHeading(imgui, "Minibosses", { 0.88, 0.38, 0.32, 1.0 })
-    DrawThessalyMinibossRow(imgui, uiState)
+    DrawThessalyMinibossRow(imgui, session)
 end

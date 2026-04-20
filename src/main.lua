@@ -144,8 +144,7 @@ AddDepthStorageNodes(internal.npcDefinitions)
 -- STORE
 -- =============================================================================
 
-public.store = lib.store.create(config, definition, dataDefaults)
-store = public.store
+store, internal.session = lib.createStore(config, definition, dataDefaults)
 RunDirectorBiomeControl_Public = public
 
 -- =============================================================================
@@ -171,12 +170,11 @@ local function registerHooks()
     if internal.RegisterHooks then
         internal.RegisterHooks()
     end
-    public.DrawTab = internal.DrawTab
-    public.DrawQuickContent = internal.DrawQuickContent
 end
 
-public.store = nil
+public.host = nil
 store = nil
+internal.session = nil
 internal.standaloneUi = nil
 
 local function init()
@@ -187,26 +185,19 @@ local function init()
     import("mods/ui_npc.lua")
     import("mods/ui_lean.lua")
     BuildDefinitionStorage()
-    lib.storage.validate(definition.storage, definition.id)
     if internal.BuildHashGroups then
         definition.hashGroups = internal.BuildHashGroups(definition.storage)
     end
-    public.store = lib.store.create(config, definition, dataDefaults)
-    store = public.store
+    store, internal.session = lib.createStore(config, definition, dataDefaults)
     registerHooks()
-    if lib.coordinator.isEnabled(store, definition.modpack) then
-        lib.mutation.apply(definition, store)
-    end
-    internal.standaloneUi = lib.host.standaloneUI(
-        public.definition,
-        store,
-        store.uiState,
-        {
-            getDrawTab = function()
-                return public.DrawTab
-            end,
-        }
-    )
+    public.host = lib.createModuleHost({
+        definition = public.definition,
+        store = store,
+        session = internal.session,
+        drawTab = internal.DrawTab,
+        drawQuickContent = internal.DrawQuickContent,
+    })
+    internal.standaloneUi = lib.standaloneHost(public.host)
 end
 
 local loader = reload.auto_single()
@@ -228,3 +219,5 @@ rom.gui.add_to_menu_bar(function()
         internal.standaloneUi.addMenuBar()
     end
 end)
+
+

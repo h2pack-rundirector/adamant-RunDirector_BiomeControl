@@ -32,7 +32,7 @@ local function getAliasWidth(aliasNodes, alias)
         error(string.format("BiomeControl hashGroups: unknown alias '%s'", tostring(alias)))
     end
 
-    local width = lib.storage.getPackWidth(node)
+    local width = lib.hashing.getPackWidth(node)
     if not width then
         error(string.format("BiomeControl hashGroups: alias '%s' is not packable", tostring(alias)))
     end
@@ -86,7 +86,7 @@ local function packAliasItems(groups, aliasNodes, keyPrefix, items)
 end
 
 function internal.BuildHashGroups(storage)
-    local aliasNodes = lib.storage.getAliases(storage)
+    local aliasNodes = lib.hashing.getAliases(storage)
     local groups = {}
 
     packAliasItems(groups, aliasNodes, "global", {

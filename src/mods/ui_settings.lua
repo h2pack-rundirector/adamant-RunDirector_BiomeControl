@@ -1,34 +1,34 @@
 local internal = RunDirectorBiomeControl_Internal
 
-function internal.DrawSettingsTab(imgui, uiState)
+function internal.DrawSettingsTab(imgui, session)
     internal.DrawSectionHeading(imgui, "Route Reward Priorities", { 0.90, 0.82, 0.56, 1.0 })
-    lib.widgets.checkbox(imgui, uiState, "PrioritizeSpecificRewardEnabled", {
+    lib.widgets.checkbox(imgui, session, "PrioritizeSpecificRewardEnabled", {
         label = "Choose First Boon in Each Biome",
     })
 
-    if uiState.view["PrioritizeSpecificRewardEnabled"] == true then
-        lib.widgets.dropdown(imgui, uiState, "PriorityBiome1", {
+    if session.view["PrioritizeSpecificRewardEnabled"] == true then
+        lib.widgets.dropdown(imgui, session, "PriorityBiome1", {
             label = "Biome 1 Choice ",
             values = internal.priorityOptions,
             displayValues = internal.priorityDisplayValues,
             valueColors = internal.priorityValueColors,
             controlWidth = 180,
         })
-        lib.widgets.dropdown(imgui, uiState, "PriorityBiome2", {
+        lib.widgets.dropdown(imgui, session, "PriorityBiome2", {
             label = "Biome 2 Choice",
             values = internal.priorityOptions,
             displayValues = internal.priorityDisplayValues,
             valueColors = internal.priorityValueColors,
             controlWidth = 180,
         })
-        lib.widgets.dropdown(imgui, uiState, "PriorityBiome3", {
+        lib.widgets.dropdown(imgui, session, "PriorityBiome3", {
             label = "Biome 3 Choice",
             values = internal.priorityOptions,
             displayValues = internal.priorityDisplayValues,
             valueColors = internal.priorityValueColors,
             controlWidth = 180,
         })
-        lib.widgets.dropdown(imgui, uiState, "PriorityBiome4", {
+        lib.widgets.dropdown(imgui, session, "PriorityBiome4", {
             label = "Biome 4 Choice",
             values = internal.priorityOptions,
             displayValues = internal.priorityDisplayValues,
@@ -39,19 +39,19 @@ function internal.DrawSettingsTab(imgui, uiState)
 
     imgui.Spacing()
     internal.DrawSectionHeading(imgui, "Trial Reward Priorities", { 0.70, 0.84, 0.96, 1.0 })
-    lib.widgets.checkbox(imgui, uiState, "PrioritizeTrialRewardEnabled", {
+    lib.widgets.checkbox(imgui, session, "PrioritizeTrialRewardEnabled", {
         label = "Choose Boon Priorities in Trial Rooms",
     })
 
-    if uiState.view["PrioritizeTrialRewardEnabled"] == true then
-        lib.widgets.dropdown(imgui, uiState, "PriorityTrial1", {
+    if session.view["PrioritizeTrialRewardEnabled"] == true then
+        lib.widgets.dropdown(imgui, session, "PriorityTrial1", {
             label = "Trial Choice A   ",
             values = internal.priorityOptions,
             displayValues = internal.priorityDisplayValues,
             valueColors = internal.priorityValueColors,
             controlWidth = 180,
         })
-        lib.widgets.dropdown(imgui, uiState, "PriorityTrial2", {
+        lib.widgets.dropdown(imgui, session, "PriorityTrial2", {
             label = "Trial Choice B   ",
             values = internal.priorityOptions,
             displayValues = internal.priorityDisplayValues,
@@ -66,7 +66,7 @@ function internal.DrawSettingsTab(imgui, uiState)
     lib.widgets.confirmButton(imgui, "biome_control_reset_all_settings", "Reset All Controls", {
         confirmLabel = "Confirm Reset All",
         onConfirm = function()
-            internal.ResetAllControls(uiState)
+            internal.ResetAllControls(session)
         end,
     })
 end
