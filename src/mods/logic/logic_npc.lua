@@ -22,7 +22,7 @@ function internal.BuildNPCPatchPlan(plan)
 end
 
 function internal.RegisterNPCHooks()
-    modutil.mod.Path.Wrap("ChooseEncounter", function(base, currentRun, room, args)
+    lib.hooks.Wrap(internal, "ChooseEncounter", function(base, currentRun, room, args)
         if not internal.IsEnabled() then return base(currentRun, room, args) end
 
         args = args or {}
@@ -120,7 +120,7 @@ function internal.RegisterNPCHooks()
     end)
 
     for _, npcName in ipairs(npcPriorityList) do
-        modutil.mod.Path.Wrap("Begin" .. npcName .. "Encounter", function(base, currentRun, room, args)
+        lib.hooks.Wrap(internal, "Begin" .. npcName .. "Encounter", function(base, currentRun, room, args)
             if internal.IsEnabled() then
                 local state = internal.GetRunState()
                 if state then

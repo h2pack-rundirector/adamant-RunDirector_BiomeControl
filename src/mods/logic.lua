@@ -66,4 +66,3 @@ function internal.RegisterHooks()
         internal.RegisterNPCHooks()
     end
 end
-

@@ -177,7 +177,7 @@ function internal.BuildBiomePatchPlan(plan)
 end
 
 function internal.RegisterBiomeHooks()
-    modutil.mod.Path.Wrap("GetEligibleLootNames", function(base, excludeLootNames)
+    lib.hooks.Wrap(internal, "GetEligibleLootNames", function(base, excludeLootNames)
         if not internal.IsEnabled() then return base(excludeLootNames) end
 
         local state = internal.GetRunState()
@@ -197,7 +197,7 @@ function internal.RegisterBiomeHooks()
         return eligible
     end)
 
-    modutil.mod.Path.Wrap("GiveLoot", function(base, args)
+    lib.hooks.Wrap(internal, "GiveLoot", function(base, args)
         if not internal.IsEnabled() then return base(args) end
 
         local state = internal.GetRunState()
@@ -212,7 +212,7 @@ function internal.RegisterBiomeHooks()
         return result
     end)
 
-    modutil.mod.Path.Wrap("SetupRoomReward", function(base, currentRun, room, previouslyChosenRewards, args)
+    lib.hooks.Wrap(internal, "SetupRoomReward", function(base, currentRun, room, previouslyChosenRewards, args)
         base(currentRun, room, previouslyChosenRewards, args)
         if not internal.IsEnabled() then return end
 

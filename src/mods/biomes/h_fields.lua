@@ -64,7 +64,7 @@ function internal.DrawBiomeTab_Fields(imgui, session)
 end
 
 function internal.RegisterFieldsHooks()
-    modutil.mod.Path.Wrap("SelectFieldsDoorCageCount", function(base, run, room)
+    lib.hooks.Wrap(internal, "SelectFieldsDoorCageCount", function(base, run, room)
         if not internal.IsEnabled() then
             return base(run, room)
         end

@@ -77,14 +77,12 @@ local function init()
         public.definition.hashGroups = internal.BuildHashGroups(public.definition.storage)
     end
 
-    if internal.RegisterHooks then
-        internal.RegisterHooks()
-    end
-
     public.host = lib.createModuleHost({
         definition = public.definition,
         store = store,
         session = session,
+        hookOwner = internal,
+        registerHooks = internal.RegisterHooks,
         drawTab = internal.DrawTab,
         drawQuickContent = internal.DrawQuickContent,
     })
@@ -94,7 +92,7 @@ end
 local loader = reload.auto_single()
 
 modutil.once_loaded.game(function()
-    loader.load(init, init)
+    loader.load(nil, init)
 end)
 
 ---@diagnostic disable-next-line: redundant-parameter
