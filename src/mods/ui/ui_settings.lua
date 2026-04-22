@@ -1,5 +1,7 @@
 local internal = RunDirectorBiomeControl_Internal
 
+local PRIORITY_LABEL_WIDTH = 160
+
 function internal.DrawSettingsTab(imgui, session)
     internal.DrawSectionHeading(imgui, "Route Reward Priorities", { 0.90, 0.82, 0.56, 1.0 })
     lib.widgets.checkbox(imgui, session, "PrioritizeSpecificRewardEnabled", {
@@ -8,10 +10,11 @@ function internal.DrawSettingsTab(imgui, session)
 
     if session.view["PrioritizeSpecificRewardEnabled"] == true then
         lib.widgets.dropdown(imgui, session, "PriorityBiome1", {
-            label = "Biome 1 Choice ",
+            label = "Biome 1 Choice",
             values = internal.priorityOptions,
             displayValues = internal.priorityDisplayValues,
             valueColors = internal.priorityValueColors,
+            labelWidth = PRIORITY_LABEL_WIDTH,
             controlWidth = 180,
         })
         lib.widgets.dropdown(imgui, session, "PriorityBiome2", {
@@ -19,6 +22,7 @@ function internal.DrawSettingsTab(imgui, session)
             values = internal.priorityOptions,
             displayValues = internal.priorityDisplayValues,
             valueColors = internal.priorityValueColors,
+            labelWidth = PRIORITY_LABEL_WIDTH,
             controlWidth = 180,
         })
         lib.widgets.dropdown(imgui, session, "PriorityBiome3", {
@@ -26,6 +30,7 @@ function internal.DrawSettingsTab(imgui, session)
             values = internal.priorityOptions,
             displayValues = internal.priorityDisplayValues,
             valueColors = internal.priorityValueColors,
+            labelWidth = PRIORITY_LABEL_WIDTH,
             controlWidth = 180,
         })
         lib.widgets.dropdown(imgui, session, "PriorityBiome4", {
@@ -33,6 +38,7 @@ function internal.DrawSettingsTab(imgui, session)
             values = internal.priorityOptions,
             displayValues = internal.priorityDisplayValues,
             valueColors = internal.priorityValueColors,
+            labelWidth = PRIORITY_LABEL_WIDTH,
             controlWidth = 180,
         })
     end
@@ -45,17 +51,19 @@ function internal.DrawSettingsTab(imgui, session)
 
     if session.view["PrioritizeTrialRewardEnabled"] == true then
         lib.widgets.dropdown(imgui, session, "PriorityTrial1", {
-            label = "Trial Choice A   ",
+            label = "Trial Choice A",
             values = internal.priorityOptions,
             displayValues = internal.priorityDisplayValues,
             valueColors = internal.priorityValueColors,
+            labelWidth = PRIORITY_LABEL_WIDTH,
             controlWidth = 180,
         })
         lib.widgets.dropdown(imgui, session, "PriorityTrial2", {
-            label = "Trial Choice B   ",
+            label = "Trial Choice B",
             values = internal.priorityOptions,
             displayValues = internal.priorityDisplayValues,
             valueColors = internal.priorityValueColors,
+            labelWidth = PRIORITY_LABEL_WIDTH,
             controlWidth = 180,
         })
     end

@@ -11,7 +11,8 @@ globals = {
     "_PLUGIN",
     "lib",
     "RunDirectorBiomeControl_Internal",
-    "CurrentRun"
+    "CurrentRun",
+    "GameState"
     
 }
 read_globals = {

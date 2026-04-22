@@ -42,6 +42,7 @@ end
 
 import("mods/logic/logic_biome.lua")
 import("mods/logic/logic_npc.lua")
+import("mods/logic/logic_dream.lua")
 
 public.definition.patchPlan = function(plan)
     if internal.BuildPatchPlan then
@@ -64,5 +65,8 @@ function internal.RegisterHooks()
     end
     if internal.RegisterNPCHooks then
         internal.RegisterNPCHooks()
+    end
+    if internal.RegisterDreamHooks then
+        internal.RegisterDreamHooks()
     end
 end

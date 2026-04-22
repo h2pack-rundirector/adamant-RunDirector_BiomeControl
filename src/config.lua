@@ -17,6 +17,12 @@ return {
     PriorityTrial1 = "",
     PriorityTrial2 = "",
 
+    DreamRouteEnabled = false,
+    DreamRouteBiome1 = "G",
+    DreamRouteBiome2 = "I",
+    DreamRouteBiome3 = "N",
+    DreamRouteBiome4 = "P",
+
     -- Underworld: Erebus
     ModeStoryArachne = 0,
     PackedStoryArachneMin = 4,

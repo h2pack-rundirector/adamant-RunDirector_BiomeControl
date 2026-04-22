@@ -46,6 +46,17 @@ internal.hubRewardReplacementOptions = { "" }
 internal.hubRewardReplacementDisplayValues = {
     [""] = "Hermes (Default)",
 }
+internal.dreamBiomeOptions = { "F", "G", "H", "I", "N", "O", "P", "Q" }
+internal.dreamBiomeDisplayValues = {}
+internal.dreamNaturalNextBiome = {
+    F = "G",
+    G = "H",
+    H = "I",
+    N = "O",
+    N_SubRooms = "O",
+    O = "P",
+    P = "Q",
+}
 
 internal.biomeTabs = {
     { key = "F", label = "Erebus",   slug = "f_erebus",   region = "Underworld" },
@@ -57,6 +68,10 @@ internal.biomeTabs = {
     { key = "P", label = "Olympus",  slug = "p_olympus",  region = "Surface" },
     { key = "Q", label = "Summit",   slug = "q_summit",   region = "Surface" },
 }
+
+for biomeCode, biomeName in pairs(biomeMap) do
+    internal.dreamBiomeDisplayValues[biomeCode] = biomeName
+end
 
 function internal.registerRoomControl(data)
     table.insert(internal.roomDefinitionSpecs, cloneData(data))
@@ -314,6 +329,11 @@ function internal.BuildDefinitionStorage()
         { type = "bool",   configKey = "PrioritizeTrialRewardEnabled" },
         { type = "string", configKey = "PriorityTrial1" },
         { type = "string", configKey = "PriorityTrial2" },
+        { type = "bool",   configKey = "DreamRouteEnabled" },
+        { type = "string", configKey = "DreamRouteBiome1", default = "G" },
+        { type = "string", configKey = "DreamRouteBiome2", default = "I" },
+        { type = "string", configKey = "DreamRouteBiome3", default = "N" },
+        { type = "string", configKey = "DreamRouteBiome4", default = "P" },
         { type = "int",    configKey = "ViewRegion" },
     }
 

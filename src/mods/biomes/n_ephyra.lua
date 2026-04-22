@@ -220,7 +220,6 @@ internal.registerPatchBuilder(function(plan, read, log)
 end)
 
 local function DrawEphyraStoryRow(imgui, session)
-    local dropdownColumnX = 160
     local entry = internal.modeEntryLookup.EphyraStoryMode
     local modeValues = {}
     local modeDisplayValues = {}
@@ -231,20 +230,16 @@ local function DrawEphyraStoryRow(imgui, session)
         modeDisplayValues[encoded] = entry.modeDisplayValues[value] or tostring(value)
     end
 
-    imgui.AlignTextToFramePadding()
-    imgui.Text("Story")
-    imgui.SameLine()
-    imgui.SetCursorPosX(dropdownColumnX)
     lib.widgets.dropdown(imgui, session, "EphyraStoryMode", {
-        label = "",
+        label = "Story",
         values = modeValues,
         displayValues = modeDisplayValues,
+        labelWidth = 160,
         controlWidth = 150,
     })
 end
 
 local function DrawEphyraMinibossRow(imgui, session)
-    local dropdownColumnX = 160
     local entry = internal.modeEntryLookup.EphyraMiniBossMode
     local modeValues = {}
     local modeDisplayValues = {}
@@ -255,14 +250,11 @@ local function DrawEphyraMinibossRow(imgui, session)
         modeDisplayValues[encoded] = entry.modeDisplayValues[value] or tostring(value)
     end
 
-    imgui.AlignTextToFramePadding()
-    imgui.Text("Miniboss")
-    imgui.SameLine()
-    imgui.SetCursorPosX(dropdownColumnX)
     lib.widgets.dropdown(imgui, session, "EphyraMiniBossMode", {
-        label = "",
+        label = "Miniboss",
         values = modeValues,
         displayValues = modeDisplayValues,
+        labelWidth = 160,
         controlWidth = 250,
     })
 end
@@ -273,6 +265,7 @@ local function DrawEphyraRewards(imgui, session, store)
         label = "Hub Hermes Replacement",
         values = internal.hubRewardReplacementOptions,
         displayValues = internal.hubRewardReplacementDisplayValues,
+        labelWidth = 160,
         controlWidth = 180,
     })
 

@@ -121,7 +121,6 @@ internal.registerPatchBuilder(function(plan, read, log)
 end)
 
 local function DrawThessalyMinibossRow(imgui, session)
-    local dropdownColumnX = 160
     local rangeColumnGap = 20
     local modeValues = { 0, 1, 2, 3 }
     local modeDisplayValues = {
@@ -131,14 +130,11 @@ local function DrawThessalyMinibossRow(imgui, session)
         [3] = "Disable Both",
     }
 
-    imgui.AlignTextToFramePadding()
-    imgui.Text("Miniboss")
-    imgui.SameLine()
-    imgui.SetCursorPosX(dropdownColumnX)
     lib.widgets.dropdown(imgui, session, "ThessalyMiniBossMode", {
-        label = "",
+        label = "Miniboss",
         values = modeValues,
         displayValues = modeDisplayValues,
+        labelWidth = 160,
         controlWidth = 200,
     })
 

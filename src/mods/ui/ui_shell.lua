@@ -151,7 +151,7 @@ local function DrawUnderworldTab(imgui, session)
     local tabs = BuildRegionTabList(UNDERWORLD_REGION)
     internal.uiLeanState.underworldTab = lib.nav.verticalTabs(imgui, {
         id = "BiomeControlUnderworldTabs",
-        navWidth = 180,
+        navWidth = 220,
         tabs = tabs,
         activeKey = internal.uiLeanState.underworldTab,
     })
@@ -177,7 +177,7 @@ local function DrawSurfaceTab(imgui, session)
     local tabs = BuildRegionTabList(SURFACE_REGION)
     internal.uiLeanState.surfaceTab = lib.nav.verticalTabs(imgui, {
         id = "BiomeControlSurfaceTabs",
-        navWidth = 180,
+        navWidth = 220,
         tabs = tabs,
         activeKey = internal.uiLeanState.surfaceTab,
     })
@@ -211,6 +211,11 @@ function internal.DrawTab(imgui, session)
 
     if imgui.BeginTabItem("Surface") then
         DrawSurfaceTab(imgui, session)
+        imgui.EndTabItem()
+    end
+
+    if imgui.BeginTabItem("Dream") then
+        internal.DrawDreamTab(imgui, session)
         imgui.EndTabItem()
     end
 
