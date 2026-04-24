@@ -131,10 +131,7 @@ internal.DrawRoomRow = DrawRoomRow
 local function DrawRegionPlaceholder(imgui, region)
     lib.widgets.text(imgui, region)
     lib.widgets.separator(imgui)
-    lib.widgets.text(imgui, "Not migrated yet.", {
-        color = { 0.65, 0.65, 0.65, 1.0 },
-    })
-    lib.widgets.text(imgui, "Next step is writing the tabs explicitly against lib.widgets.*.", {
+    lib.widgets.text(imgui, "No controls are available for this tab.", {
         color = { 0.65, 0.65, 0.65, 1.0 },
     })
 end
