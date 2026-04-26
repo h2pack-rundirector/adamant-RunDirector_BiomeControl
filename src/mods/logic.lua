@@ -1,11 +1,12 @@
 local internal = RunDirectorBiomeControl_Internal
+local PACK_ID = "run-director"
 
 local function Read(key)
     return internal.store.read(key)
 end
 
 local function IsEnabled()
-    return lib.isModuleEnabled(internal.store, internal.definition.modpack)
+    return lib.isModuleEnabled(internal.store, PACK_ID)
 end
 
 internal.BiomeControlRead = Read
@@ -43,12 +44,6 @@ end
 import("mods/logic/logic_biome.lua")
 import("mods/logic/logic_npc.lua")
 import("mods/logic/logic_dream.lua")
-
-internal.definition.patchPlan = function(plan)
-    if internal.BuildPatchPlan then
-        internal.BuildPatchPlan(plan)
-    end
-end
 
 function internal.BuildPatchPlan(plan)
     if internal.BuildBiomePatchPlan then

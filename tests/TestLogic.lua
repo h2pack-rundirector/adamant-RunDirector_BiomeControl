@@ -14,7 +14,7 @@ function TestBiomeControlLogic:testPatchPlanAppliesAndRevertsRoomAndNpcMutations
         },
     })
 
-    local okApply, applyErr = lib.lifecycle.applyMutation(harness.internal.definition, harness.store)
+    local okApply, applyErr = lib.lifecycle.applyMutation(harness.definition, harness.store)
     lu.assertTrue(okApply, tostring(applyErr))
 
     lu.assertEquals(RoomData.F_Story01.ForceAtBiomeDepthMin, 5)
@@ -27,7 +27,7 @@ function TestBiomeControlLogic:testPatchPlanAppliesAndRevertsRoomAndNpcMutations
     lu.assertEquals(#RoomData.H_MiniBoss01.GameStateRequirements, 1)
     lu.assertEquals(RoomData.H_MiniBoss01.GameStateRequirements[1].Value, 3)
 
-    local okRevert, revertErr = lib.lifecycle.revertMutation(harness.internal.definition, harness.store)
+    local okRevert, revertErr = lib.lifecycle.revertMutation(harness.definition, harness.store)
     lu.assertTrue(okRevert, tostring(revertErr))
 
     lu.assertNil(RoomData.F_Story01.ForceAtBiomeDepthMin)

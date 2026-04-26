@@ -1,4 +1,5 @@
 local internal = RunDirectorBiomeControl_Internal
+local MODULE_ID = "BiomeControl"
 
 local roomDefinitions = internal.roomDefinitions
 local roomLookup = internal.roomLookup
@@ -20,7 +21,7 @@ local function Read(key)
 end
 
 local function Log(fmt, ...)
-    lib.logging.logIf(internal.definition.id, Read("DebugMode") == true, fmt, ...)
+    lib.logging.logIf(MODULE_ID, Read("DebugMode") == true, fmt, ...)
 end
 
 local function GetDefinitionMode(def)

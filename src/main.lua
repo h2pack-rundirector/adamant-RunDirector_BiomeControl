@@ -15,12 +15,12 @@ local dataDefaults = import("config.lua")
 local config = chalk.auto("config.lua")
 
 local PACK_ID = "run-director"
+local MODULE_ID = "BiomeControl"
 ---@class RunDirectorBiomeControlInternal
----@field definition ModuleDefinition|nil
 ---@field store ManagedStore|nil
 ---@field standaloneUi StandaloneRuntime|nil
----@field BuildDefinitionStorage fun()|nil
----@field BuildHashGroups fun(storage: StorageSchema|nil): table|nil
+---@field BuildStorage fun(): StorageSchema|nil
+---@field BuildHashGroupPlan fun(): table|nil
 ---@field RegisterHooks fun()|nil
 ---@field DrawTab fun(imgui: table, session: AuthorSession)|nil
 ---@field DrawQuickContent fun(imgui: table, session: AuthorSession)|nil
@@ -28,20 +28,9 @@ local PACK_ID = "run-director"
 ---@field REGION_UNDERWORLD integer|nil
 ---@field REGION_SURFACE integer|nil
 ---@field REGION_OPTIONS table|nil
----@field regionFilter integer|nil
 RunDirectorBiomeControl_Internal = RunDirectorBiomeControl_Internal or {}
 ---@type RunDirectorBiomeControlInternal
 local internal = RunDirectorBiomeControl_Internal
-
-public.definition = {
-    modpack = PACK_ID,
-    id = "BiomeControl",
-    name = "Biome Control",
-    tooltip = "Control biome rooms, NPC encounters, rewards, and biome-specific tweaks.",
-    default = dataDefaults.Enabled,
-    affectsRunData = true,
-}
-internal.definition = public.definition
 
 internal.DEFAULT_FIELD_MEDIUM = 0.4
 internal.REGION_UNDERWORLD = 1
@@ -50,43 +39,11 @@ internal.REGION_OPTIONS = {
     { label = "Underworld", value = internal.REGION_UNDERWORLD },
     { label = "Surface", value = internal.REGION_SURFACE },
 }
-internal.regionFilter = config.ViewRegion or internal.REGION_UNDERWORLD
 
 public.host = nil
 local store
 local session
 internal.standaloneUi = nil
-
-local function init()
-    import_as_fallback(rom.game)
-    import("mods/data.lua")
-    import("mods/hash_groups.lua")
-    import("mods/logic.lua")
-    import("mods/ui.lua")
-
-    internal.BuildDefinitionStorage()
-
-    store, session = lib.createStore(config, internal.definition, dataDefaults)
-    internal.store = store
-    RunDirectorBiomeControl_Public = public
-
-    if internal.BuildHashGroups then
-        internal.definition.hashGroups = internal.BuildHashGroups(internal.definition.storage)
-    end
-
-    public.host = lib.createModuleHost({
-        definition = internal.definition,
-        store = store,
-        session = session,
-        hookOwner = internal,
-        registerHooks = internal.RegisterHooks,
-        drawTab = internal.DrawTab,
-        drawQuickContent = internal.DrawQuickContent,
-    })
-    internal.standaloneUi = lib.standaloneHost(public.host)
-end
-
-local loader = reload.auto_single()
 
 local function registerGui()
     ---@diagnostic disable-next-line: redundant-parameter
@@ -103,6 +60,41 @@ local function registerGui()
         end
     end)
 end
+
+local function init()
+    import_as_fallback(rom.game)
+    import("mods/data.lua")
+    import("mods/hash_groups.lua")
+    import("mods/logic.lua")
+    import("mods/ui.lua")
+
+    local definition = lib.prepareDefinition(internal, dataDefaults, {
+        modpack = PACK_ID,
+        id = MODULE_ID,
+        name = "Biome Control",
+        tooltip = "Control biome rooms, NPC encounters, rewards, and biome-specific tweaks.",
+        affectsRunData = true,
+        storage = internal.BuildStorage(),
+        hashGroupPlan = internal.BuildHashGroupPlan and internal.BuildHashGroupPlan() or nil,
+        patchPlan = internal.BuildPatchPlan,
+    })
+
+    store, session = lib.createStore(config, definition)
+    internal.store = store
+
+    public.host = lib.createModuleHost({
+        definition = definition,
+        store = store,
+        session = session,
+        hookOwner = internal,
+        registerHooks = internal.RegisterHooks,
+        drawTab = internal.DrawTab,
+        drawQuickContent = internal.DrawQuickContent,
+    })
+    internal.standaloneUi = lib.standaloneHost(public.host)
+end
+
+local loader = reload.auto_single()
 
 modutil.once_loaded.game(function()
     loader.load(registerGui, init)

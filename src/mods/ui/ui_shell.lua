@@ -2,24 +2,14 @@ local internal = RunDirectorBiomeControl_Internal
 
 local UNDERWORLD_REGION = "Underworld"
 local SURFACE_REGION = "Surface"
-
-internal.uiLeanState = internal.uiLeanState or {
-    underworldTab = "NPCs",
-    surfaceTab = "NPCs",
-}
+local UNDERWORLD_TAB_ALIAS = "UnderworldTab"
+local SURFACE_TAB_ALIAS = "SurfaceTab"
 
 local function DrawSectionHeading(imgui, text, color)
     lib.widgets.text(imgui, text, { color = color })
     lib.widgets.separator(imgui)
 end
 internal.DrawSectionHeading = DrawSectionHeading
-
-function internal.ResetAllControls(session)
-    local changed = lib.resetStorageToDefaults(internal.definition.storage, session, {
-        exclude = { ViewRegion = true },
-    })
-    return changed
-end
 
 local function BuildRegionTabList(region)
     local tabs = {
@@ -146,52 +136,58 @@ internal.GetRoomDef = GetRoomDef
 
 local function DrawUnderworldTab(imgui, session)
     local tabs = BuildRegionTabList(UNDERWORLD_REGION)
-    internal.uiLeanState.underworldTab = lib.nav.verticalTabs(imgui, {
+    local activeTab = lib.nav.verticalTabs(imgui, {
         id = "BiomeControlUnderworldTabs",
         navWidth = 220,
         tabs = tabs,
-        activeKey = internal.uiLeanState.underworldTab,
+        activeKey = session.view[UNDERWORLD_TAB_ALIAS],
     })
+    if activeTab ~= session.view[UNDERWORLD_TAB_ALIAS] then
+        session.write(UNDERWORLD_TAB_ALIAS, activeTab)
+    end
 
     imgui.BeginChild("BiomeControlUnderworldDetail", 0, 0, false)
-    if internal.uiLeanState.underworldTab == "NPCs" then
+    if activeTab == "NPCs" then
         internal.DrawRegionNpcs(imgui, session, UNDERWORLD_REGION)
-    elseif internal.uiLeanState.underworldTab == "F" then
+    elseif activeTab == "F" then
         internal.DrawBiomeTab_Erebus(imgui, session)
-    elseif internal.uiLeanState.underworldTab == "G" then
+    elseif activeTab == "G" then
         internal.DrawBiomeTab_Oceanus(imgui, session)
-    elseif internal.uiLeanState.underworldTab == "H" then
+    elseif activeTab == "H" then
         internal.DrawBiomeTab_Fields(imgui, session)
-    elseif internal.uiLeanState.underworldTab == "I" then
+    elseif activeTab == "I" then
         internal.DrawBiomeTab_Tartarus(imgui, session)
     else
-        DrawRegionPlaceholder(imgui, internal.uiLeanState.underworldTab)
+        DrawRegionPlaceholder(imgui, activeTab)
     end
     imgui.EndChild()
 end
 
 local function DrawSurfaceTab(imgui, session)
     local tabs = BuildRegionTabList(SURFACE_REGION)
-    internal.uiLeanState.surfaceTab = lib.nav.verticalTabs(imgui, {
+    local activeTab = lib.nav.verticalTabs(imgui, {
         id = "BiomeControlSurfaceTabs",
         navWidth = 220,
         tabs = tabs,
-        activeKey = internal.uiLeanState.surfaceTab,
+        activeKey = session.view[SURFACE_TAB_ALIAS],
     })
+    if activeTab ~= session.view[SURFACE_TAB_ALIAS] then
+        session.write(SURFACE_TAB_ALIAS, activeTab)
+    end
 
     imgui.BeginChild("BiomeControlSurfaceDetail", 0, 0, false)
-    if internal.uiLeanState.surfaceTab == "NPCs" then
+    if activeTab == "NPCs" then
         internal.DrawRegionNpcs(imgui, session, SURFACE_REGION)
-    elseif internal.uiLeanState.surfaceTab == "N" then
+    elseif activeTab == "N" then
         internal.DrawBiomeTab_Ephyra(imgui, session, internal.store)
-    elseif internal.uiLeanState.surfaceTab == "O" then
+    elseif activeTab == "O" then
         internal.DrawBiomeTab_Thessaly(imgui, session)
-    elseif internal.uiLeanState.surfaceTab == "P" then
+    elseif activeTab == "P" then
         internal.DrawBiomeTab_Olympus(imgui, session)
-    elseif internal.uiLeanState.surfaceTab == "Q" then
+    elseif activeTab == "Q" then
         internal.DrawBiomeTab_Summit(imgui)
     else
-        DrawRegionPlaceholder(imgui, internal.uiLeanState.surfaceTab)
+        DrawRegionPlaceholder(imgui, activeTab)
     end
     imgui.EndChild()
 end
@@ -229,7 +225,7 @@ function internal.DrawQuickContent(imgui, session)
     lib.widgets.confirmButton(imgui, "biome_control_quick_reset_all", "Reset To Default", {
         confirmLabel = "Confirm Reset All",
         onConfirm = function()
-            internal.ResetAllControls(session)
+            session.resetToDefaults()
         end,
     })
 end

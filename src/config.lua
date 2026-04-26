@@ -2,8 +2,6 @@ return {
     Enabled = false,
     DebugMode = false,
 
-    ViewRegion = 1,
-
     OnlyAllowForcedEncounters = false,
     IgnoreMaxDepth = false,
     NPCSpacing = 6,

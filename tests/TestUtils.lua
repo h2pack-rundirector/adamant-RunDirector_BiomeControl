@@ -183,13 +183,6 @@ function ResetBiomeControlHarness(opts)
     installBaseGlobals(opts)
 
     RunDirectorBiomeControl_Internal = {
-        definition = {
-            modpack = "run-director",
-            id = "BiomeControl",
-            name = "Biome Control",
-            default = false,
-            affectsRunData = true,
-        },
         DEFAULT_FIELD_MEDIUM = 0.4,
         REGION_UNDERWORLD = 1,
         REGION_SURFACE = 2,
@@ -197,19 +190,29 @@ function ResetBiomeControlHarness(opts)
 
     local internal = RunDirectorBiomeControl_Internal
     dofile("src/mods/data.lua")
+    dofile("src/mods/hash_groups.lua")
     dofile("src/mods/logic.lua")
-    internal.BuildDefinitionStorage()
 
     local dataDefaults = dofile("src/config.lua")
     local config = deepCopy(dataDefaults)
     applyOverrides(config, opts.config)
 
-    local store, session = lib.createStore(config, internal.definition, dataDefaults)
+    local definition = lib.prepareDefinition(internal, dataDefaults, {
+        modpack = "run-director",
+        id = "BiomeControl",
+        name = "Biome Control",
+        affectsRunData = true,
+        storage = internal.BuildStorage(),
+        hashGroupPlan = internal.BuildHashGroupPlan and internal.BuildHashGroupPlan() or nil,
+        patchPlan = internal.BuildPatchPlan,
+    })
+
+    local store, session = lib.createStore(config, definition)
     internal.store = store
 
     if opts.registerHooks then
         internal.host = lib.createModuleHost({
-            definition = internal.definition,
+            definition = definition,
             store = store,
             session = session,
             hookOwner = internal,
@@ -219,6 +222,7 @@ function ResetBiomeControlHarness(opts)
 
     return {
         internal = internal,
+        definition = definition,
         config = config,
         store = store,
         session = session,

@@ -316,8 +316,8 @@ for _, npcId in ipairs(internal.npcGroups.orderedIds) do
     end)
 end
 
-function internal.BuildDefinitionStorage()
-    internal.definition.storage = {
+function internal.BuildStorage()
+    local storage = {
         { type = "bool",   configKey = "OnlyAllowForcedEncounters" },
         { type = "bool",   configKey = "IgnoreMaxDepth" },
         { type = "int",    configKey = "NPCSpacing",                     min = 1, max = 12 },
@@ -334,7 +334,8 @@ function internal.BuildDefinitionStorage()
         { type = "string", configKey = "DreamRouteBiome2", default = "I" },
         { type = "string", configKey = "DreamRouteBiome3", default = "N" },
         { type = "string", configKey = "DreamRouteBiome4", default = "P" },
-        { type = "int",    configKey = "ViewRegion" },
+        { type = "string", alias = "UnderworldTab", lifetime = "transient", default = "NPCs", maxLen = 32 },
+        { type = "string", alias = "SurfaceTab",    lifetime = "transient", default = "NPCs", maxLen = 32 },
     }
 
     local storageTypeMap = { checkbox = "bool", stepper = "int", dropdown = "string", int32 = "int" }
@@ -361,7 +362,7 @@ function internal.BuildDefinitionStorage()
                     default = field.min or 0
                 end
             end
-            table.insert(internal.definition.storage, {
+            table.insert(storage, {
                 type = storageType,
                 configKey = field.configKey,
                 default = default,
@@ -383,7 +384,7 @@ function internal.BuildDefinitionStorage()
                 default = false,
             }
         end
-        table.insert(internal.definition.storage, {
+        table.insert(storage, {
             type = "packedInt",
             configKey = configKey,
             alias = configKey,
@@ -393,14 +394,14 @@ function internal.BuildDefinitionStorage()
     end
 
     for _, field in ipairs(internal.specialRangeFields) do
-        table.insert(internal.definition.storage, {
+        table.insert(storage, {
             type = "int",
             configKey = field.configKeyMin,
             default = field.min,
             min = field.min,
             max = field.max,
         })
-        table.insert(internal.definition.storage, {
+        table.insert(storage, {
             type = "int",
             configKey = field.configKeyMax,
             default = field.max,
@@ -410,7 +411,7 @@ function internal.BuildDefinitionStorage()
     end
 
     for _, field in ipairs(internal.modeStorageFields) do
-        table.insert(internal.definition.storage, field)
+        table.insert(storage, field)
     end
 
     local function addDepthStorageNodes(definitions)
@@ -418,7 +419,7 @@ function internal.BuildDefinitionStorage()
         for _, def in ipairs(definitions) do
             if not seen[def.configKeyMin] then
                 seen[def.configKeyMin] = true
-                table.insert(internal.definition.storage, {
+                table.insert(storage, {
                     type = "int",
                     configKey = def.configKeyMin,
                     default = def.minDefault,
@@ -428,7 +429,7 @@ function internal.BuildDefinitionStorage()
             end
             if not seen[def.configKeyMax] then
                 seen[def.configKeyMax] = true
-                table.insert(internal.definition.storage, {
+                table.insert(storage, {
                     type = "int",
                     configKey = def.configKeyMax,
                     default = def.maxDefault,
@@ -441,4 +442,6 @@ function internal.BuildDefinitionStorage()
 
     addDepthStorageNodes(internal.roomDefinitions)
     addDepthStorageNodes(internal.npcDefinitions)
+
+    return storage
 end
