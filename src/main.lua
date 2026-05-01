@@ -45,14 +45,12 @@ local session
 internal.standaloneUi = nil
 
 local function registerGui()
-    ---@diagnostic disable-next-line: redundant-parameter
     rom.gui.add_imgui(function()
         if internal.standaloneUi and internal.standaloneUi.renderWindow then
             internal.standaloneUi.renderWindow()
         end
     end)
 
-    ---@diagnostic disable-next-line: redundant-parameter
     rom.gui.add_to_menu_bar(function()
         if internal.standaloneUi and internal.standaloneUi.addMenuBar then
             internal.standaloneUi.addMenuBar()
