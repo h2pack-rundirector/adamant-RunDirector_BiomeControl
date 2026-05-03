@@ -1,54 +1,43 @@
-# BiomeControl
+# Biome Control
 
-> Control the structure of each biome in both routes.
+Control the structure and pacing of each biome in both Hades II routes.
 
-Part of the [Run Director modpack](https://github.com/h2pack-rundirector/run-director-modpack).
+Part of the [Run Director modpack](https://thunderstore.io/c/hades-ii/p/adamant/RunDirector_Core).
 
 ## What It Does
 
-BiomeControl lets you shape what happens inside each biome rather than simply accepting the default encounter mix.
+Biome Control lets you shape what happens inside each biome instead of accepting the default encounter mix.
 
-The module is organized by biome and exposes controls for things like:
+The module is organized by biome and exposes controls for:
 
 - forcing, disabling, or leaving specific room categories at default
 - setting min/max biome-depth windows for special rooms such as trials, fountains, shops, minibosses, and named NPC encounters
 - controlling when biome-specific NPC encounters can appear
-- setting route reward priorities, including preferred boon rewards for each biome and for trial choices
+- setting route reward priorities, including preferred boon rewards for each biome and trial choices
+- choosing first-boon preferences and Dream Dive biome order
 
 In practice, this means you can push a biome toward a more predictable structure:
 
 - guarantee that certain encounter types show up in a specific depth range
 - block unwanted side content from entering the room pool
 - make special encounters appear earlier, later, or not at all
-- bias the route toward the reward types you actually want to see
+- bias the route toward the reward types you want to see
 
 Use it when you want to direct biome pacing and encounter composition without rewriting the whole run into a static script.
 
-## Current Biome Coverage
+## Biome Coverage
 
-- `Erebus`
-  Controls Arachne, Trial, Fountain, Shop, and the three minibosses.
-- `Oceanus`
-  Controls Narcissus, Trial, Fountain, Shop, and the three minibosses.
-- `Fields`
-  Controls the two minibosses, plus:
-  - `Prevent Echo Scam`
-  - `Force 2-2 Fields`
-- `Tartarus`
-  Controls the two minibosses.
-- `Ephyra`
-  Controls Medea room, which miniboss will appear, Heracles/Artemis encounter timing, replace Hermes boon in Ephyra with another god, and bans for normal/hard subroom reward pools.
-- `Thessaly`
-  Controls Circe, Trial, Fountain, Shop, Heracles, Icarus, and a dedicated miniboss selector with a forced depth range.
-- `Olympus`
-  Controls Dionysus, Fountain, Shop, Heracles, Athena, Icarus, and the two minibosses.
-- `Summit`
-  No controls currently.
-
-The module also includes a option to select what the first boon in every biome will be and what goods are favored to appear in trial rooms.
+- Erebus: Arachne, Trial, Fountain, Shop, and the three minibosses.
+- Oceanus: Narcissus, Trial, Fountain, Shop, and the three minibosses.
+- Fields: the two minibosses, Prevent Echo Scam, and Force 2-2 Fields.
+- Tartarus: the two minibosses.
+- Ephyra: Medea room, miniboss selection, Heracles/Artemis encounter timing, Hermes boon replacement, and normal/hard subroom reward bans.
+- Thessaly: Circe, Trial, Fountain, Shop, Heracles, Icarus, and a forced-depth miniboss selector.
+- Olympus: Dionysus, Fountain, Shop, Heracles, Athena, Icarus, and the two minibosses.
+- Summit: no controls currently.
 
 ## Installation
 
-Install via [r2modman](https://thunderstore.io/c/hades-ii/) or manually place in your `ReturnOfModding/plugins` folder.
+Install via r2modman.
 
-This module is usually installed as part of the full [Run Director modpack](https://github.com/h2pack-rundirector/run-director-modpack), where it appears in the shared Run Director UI with the other run-control modules.
+This module is usually installed as part of the full [Run Director modpack](https://thunderstore.io/c/hades-ii/p/adamant/RunDirector_Core), where it appears in the shared Run Director UI with the other run-control modules.

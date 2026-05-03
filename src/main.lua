@@ -8,6 +8,7 @@ game = rom.game
 modutil = mods["SGG_Modding-ModUtil"]
 local chalk = mods["SGG_Modding-Chalk"]
 local reload = mods["SGG_Modding-ReLoad"]
+---@module "adamant-ModpackLib"
 ---@type AdamantModpackLib
 lib = mods["adamant-ModpackLib"]
 
@@ -40,8 +41,6 @@ internal.REGION_OPTIONS = {
     { label = "Surface", value = internal.REGION_SURFACE },
 }
 
-local store
-local session
 internal.standaloneUi = nil
 
 local function registerGui()
@@ -76,7 +75,7 @@ local function init()
         patchPlan = internal.BuildPatchPlan,
     })
 
-    store, session = lib.createStore(config, definition)
+    local store, session = lib.createStore(config, definition)
     internal.store = store
 
     lib.createModuleHost({
