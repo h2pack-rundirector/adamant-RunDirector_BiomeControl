@@ -201,10 +201,8 @@ function ResetBiomeControlHarness(opts)
         modpack = "run-director",
         id = "BiomeControl",
         name = "Biome Control",
-        affectsRunData = true,
         storage = internal.BuildStorage(),
         hashGroupPlan = internal.BuildHashGroupPlan and internal.BuildHashGroupPlan() or nil,
-        patchPlan = internal.BuildPatchPlan,
     })
 
     local store, session = lib.createStore(config, definition)
@@ -231,6 +229,7 @@ function ResetBiomeControlHarness(opts)
             definition = definition,
             store = store,
             session = session,
+            registerPatchMutation = internal.BuildPatchPlan,
             drawTab = function() end,
             hookOwner = internal,
             registerHooks = internal.RegisterHooks,
@@ -240,6 +239,10 @@ function ResetBiomeControlHarness(opts)
     return {
         internal = internal,
         definition = definition,
+        mutationBundle = {
+            affectsRunData = true,
+            patchMutation = internal.BuildPatchPlan,
+        },
         config = config,
         store = store,
         session = session,

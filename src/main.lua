@@ -19,6 +19,7 @@ local MODULE_ID = "BiomeControl"
 local PLUGIN_GUID = _PLUGIN.guid
 ---@class RunDirectorBiomeControlInternal
 ---@field store ManagedStore|nil
+---@field host AuthorHost|nil
 ---@field standaloneUi StandaloneRuntime|nil
 ---@field BuildStorage fun(): StorageSchema|nil
 ---@field BuildHashGroupPlan fun(): table|nil
@@ -64,25 +65,19 @@ local function init()
     import("mods/logic.lua")
     import("mods/ui.lua")
 
-    local definition = lib.prepareDefinition(internal, {
-        modpack = PACK_ID,
-        id = MODULE_ID,
-        name = "Biome Control",
-        tooltip = "Control biome rooms, NPC encounters, rewards, and biome-specific tweaks.",
-        affectsRunData = true,
-        storage = internal.BuildStorage(),
-        hashGroupPlan = internal.BuildHashGroupPlan and internal.BuildHashGroupPlan() or nil,
-        patchPlan = internal.BuildPatchPlan,
-    })
-
-    local store, session = lib.createStore(config, definition)
-    internal.store = store
-
-    lib.createModuleHost({
+    internal.host, internal.store = lib.createModule({
+        owner = internal,
         pluginGuid = PLUGIN_GUID,
-        definition = definition,
-        store = store,
-        session = session,
+        config = config,
+        definition = {
+            modpack = PACK_ID,
+            id = MODULE_ID,
+            name = "Biome Control",
+            tooltip = "Control biome rooms, NPC encounters, rewards, and biome-specific tweaks.",
+            storage = internal.BuildStorage(),
+            hashGroupPlan = internal.BuildHashGroupPlan and internal.BuildHashGroupPlan() or nil,
+        },
+        registerPatchMutation = internal.BuildPatchPlan,
         hookOwner = internal,
         registerHooks = internal.RegisterHooks,
         drawTab = internal.DrawTab,
