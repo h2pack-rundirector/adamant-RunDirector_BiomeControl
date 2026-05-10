@@ -21,8 +21,8 @@ local PLUGIN_GUID = _PLUGIN.guid
 ---@field standaloneUi StandaloneRuntime|nil
 ---@field BuildStorage fun(): StorageSchema|nil
 ---@field BuildHashGroupPlan fun(): table|nil
----@field BuildPatchPlan fun(plan: table, store: ManagedStore)|nil
----@field RegisterHooks fun(store: ManagedStore, host: AuthorHost)|nil
+---@field BuildPatchPlan fun(plan: table, host: AuthorHost, store: ManagedStore)|nil
+---@field RegisterHooks fun(host: AuthorHost, store: ManagedStore)|nil
 ---@field DrawTab fun(imgui: table, session: AuthorSession)|nil
 ---@field DrawQuickContent fun(imgui: table, session: AuthorSession)|nil
 ---@field DEFAULT_FIELD_MEDIUM number|nil

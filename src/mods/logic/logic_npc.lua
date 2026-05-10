@@ -11,21 +11,25 @@ local function GetCurrentNPCRange(read, def)
     return minValue, maxValue
 end
 
-function internal.BuildNPCPatchPlan(plan, read)
+function internal.BuildNPCPatchPlan(plan, ...)
+    local _, store = ...
+    local read = store.read
     if NamedRequirementsData.NoRecentFieldNPCEncounter and NamedRequirementsData.NoRecentFieldNPCEncounter[1] then
         plan:set(NamedRequirementsData.NoRecentFieldNPCEncounter[1], "SumPrevRooms", read("NPCSpacing") or 6)
     end
 end
 
-function internal.RegisterNPCHooks(read, isEnabled)
+function internal.RegisterNPCHooks(host, store)
+    local read = store.read
+
     lib.hooks.Wrap(internal, "ChooseEncounter", function(base, currentRun, room, args)
-        if not isEnabled() then return base(currentRun, room, args) end
+        if not host.isEnabled() then return base(currentRun, room, args) end
 
         args = args or {}
         local legalEncounters = args.LegalEncounters or room.LegalEncounters
         if not legalEncounters then return base(currentRun, room, args) end
 
-        local state = internal.GetRunState(read)
+        local state = internal.GetRunState(store)
         if not state then return base(currentRun, room, args) end
 
         local currentRoomSet = room and room.RoomSetName
@@ -117,8 +121,8 @@ function internal.RegisterNPCHooks(read, isEnabled)
 
     for _, npcName in ipairs(npcPriorityList) do
         lib.hooks.Wrap(internal, "Begin" .. npcName .. "Encounter", function(base, currentRun, room, args)
-            if isEnabled() then
-                local state = internal.GetRunState(read)
+            if host.isEnabled() then
+                local state = internal.GetRunState(store)
                 if state then
                     state.NPCEncounterSeen[npcName] = true
                 end

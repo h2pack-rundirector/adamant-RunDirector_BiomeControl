@@ -1,5 +1,4 @@
 local internal = RunDirectorBiomeControl_Internal
-local MODULE_ID = "BiomeControl"
 local GOD_AVAILABILITY_INTEGRATION = "run-director.god-availability"
 
 local roomDefinitions = internal.roomDefinitions
@@ -16,12 +15,6 @@ local underworldTrialRooms = {
           "G_Combat13", "G_Combat14", "G_Combat15",
           "G_Combat16", "G_Combat17" },
 }
-
-local function MakeLog(read)
-    return function(fmt, ...)
-        lib.logging.logIf(MODULE_ID, read("DebugMode") == true, fmt, ...)
-    end
-end
 
 local function GetDefinitionMode(read, def)
     return internal.GetModeValue(read, def)
@@ -159,8 +152,9 @@ local function SetForcedReward(plan, roomSetKey, roomKey, rewardName, minValue, 
     })
 end
 
-function internal.BuildBiomePatchPlan(plan, read)
-    local log = MakeLog(read)
+function internal.BuildBiomePatchPlan(plan, host, store)
+    local read = store.read
+    local log = host.logIf
     for _, def in ipairs(roomDefinitions) do
         local roomKey = GetRoomKey(def)
         if roomKey then
@@ -198,11 +192,13 @@ function internal.BuildBiomePatchPlan(plan, read)
     end
 end
 
-function internal.RegisterBiomeHooks(read, isEnabled)
-    lib.hooks.Wrap(internal, "GetEligibleLootNames", function(base, excludeLootNames)
-        if not isEnabled() then return base(excludeLootNames) end
+function internal.RegisterBiomeHooks(host, store)
+    local read = store.read
 
-        local state = internal.GetRunState(read)
+    lib.hooks.Wrap(internal, "GetEligibleLootNames", function(base, excludeLootNames)
+        if not host.isEnabled() then return base(excludeLootNames) end
+
+        local state = internal.GetRunState(store)
         if not state then return base(excludeLootNames) end
         state.BiomePrioritySatisfied = state.BiomePrioritySatisfied or {}
 
@@ -220,9 +216,9 @@ function internal.RegisterBiomeHooks(read, isEnabled)
     end)
 
     lib.hooks.Wrap(internal, "GiveLoot", function(base, args)
-        if not isEnabled() then return base(args) end
+        if not host.isEnabled() then return base(args) end
 
-        local state = internal.GetRunState(read)
+        local state = internal.GetRunState(store)
         if not state then return base(args) end
 
         local result = base(args)
@@ -236,7 +232,7 @@ function internal.RegisterBiomeHooks(read, isEnabled)
 
     lib.hooks.Wrap(internal, "SetupRoomReward", function(base, currentRun, room, previouslyChosenRewards, args)
         base(currentRun, room, previouslyChosenRewards, args)
-        if not isEnabled() then return end
+        if not host.isEnabled() then return end
 
         local chosenRewardType = args and args.ChosenRewardType or room.ChosenRewardType
         if chosenRewardType ~= "Devotion" or not room or not room.Encounter then return end
@@ -255,6 +251,6 @@ function internal.RegisterBiomeHooks(read, isEnabled)
     end)
 
     if internal.RegisterFieldsHooks then
-        internal.RegisterFieldsHooks(read, isEnabled)
+        internal.RegisterFieldsHooks(host, store)
     end
 end

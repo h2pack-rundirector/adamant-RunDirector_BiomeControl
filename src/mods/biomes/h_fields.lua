@@ -63,13 +63,13 @@ function internal.DrawBiomeTab_Fields(imgui, session)
     })
 end
 
-function internal.RegisterFieldsHooks(read, isEnabled)
+function internal.RegisterFieldsHooks(host, store)
     lib.hooks.Wrap(internal, "SelectFieldsDoorCageCount", function(base, run, room)
-        if not isEnabled() then
+        if not host.isEnabled() then
             return base(run, room)
         end
 
-        if not read("ForceTwoRewardFieldsOpeners") then
+        if not store.read("ForceTwoRewardFieldsOpeners") then
             return base(run, room)
         end
 

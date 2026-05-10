@@ -46,9 +46,11 @@ local function UpdateDreamBiomePool(route, slot)
     end
 end
 
-function internal.RegisterDreamHooks(read, isEnabled)
+function internal.RegisterDreamHooks(host, store)
+    local read = store.read
+
     lib.hooks.Wrap(internal, "SelectNextDreamBiome", function(base, currentRoomSet)
-        if not isEnabled() then return base(currentRoomSet) end
+        if not host.isEnabled() then return base(currentRoomSet) end
         if not CurrentRun or not CurrentRun.IsDreamRun or not CurrentRun.CurrentRoom then
             return base(currentRoomSet)
         end

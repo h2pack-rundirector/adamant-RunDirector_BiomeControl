@@ -1,43 +1,24 @@
 local internal = RunDirectorBiomeControl_Internal
 local MODULE_ID = "BiomeControl"
 
-local activeRead = function()
-    return nil
-end
-
-local activeIsEnabled = function()
-    return false
-end
-
-local function MakeRead(store)
-    return function(key)
-        return store.read(key)
-    end
-end
-
-local function IsEnabled()
-    return activeIsEnabled()
-end
-
-function internal.GetRunState(read)
-    read = read or activeRead
+function internal.GetRunState(store)
     if not CurrentRun then return nil end
     local state = lib.gameObject.get(CurrentRun, "run-director", MODULE_ID, "run", function()
         return {
             BiomePrioritySatisfied = {},
             ForcedNPCPending = {},
             NPCEncounterSeen = {},
-            OnlyAllowForcedEncounters = read("OnlyAllowForcedEncounters"),
+            OnlyAllowForcedEncounters = store.read("OnlyAllowForcedEncounters"),
         }
     end)
-    state.OnlyAllowForcedEncounters = read("OnlyAllowForcedEncounters")
+    state.OnlyAllowForcedEncounters = store.read("OnlyAllowForcedEncounters")
     state.ForcedNPCPending = {}
 
     for _, groupKey in ipairs(internal.npcGroups.orderedIds or {}) do
         local group = internal.npcGroups[groupKey]
         state.ForcedNPCPending[groupKey] = {}
         for _, def in ipairs(group.definitions or {}) do
-            local mode = internal.GetModeValue(read, def)
+            local mode = internal.GetModeValue(store.read, def)
             if mode == "forced" then
                 state.ForcedNPCPending[groupKey][def.biome] = true
             end
@@ -51,27 +32,23 @@ import("mods/logic/logic_biome.lua")
 import("mods/logic/logic_npc.lua")
 import("mods/logic/logic_dream.lua")
 
-function internal.BuildPatchPlan(plan, store)
-    local read = MakeRead(store)
+function internal.BuildPatchPlan(plan, host, store)
     if internal.BuildBiomePatchPlan then
-        internal.BuildBiomePatchPlan(plan, read)
+        internal.BuildBiomePatchPlan(plan, host, store)
     end
     if internal.BuildNPCPatchPlan then
-        internal.BuildNPCPatchPlan(plan, read)
+        internal.BuildNPCPatchPlan(plan, host, store)
     end
 end
 
-function internal.RegisterHooks(store, host)
-    activeRead = MakeRead(store)
-    activeIsEnabled = host.isEnabled
-
+function internal.RegisterHooks(host, store)
     if internal.RegisterBiomeHooks then
-        internal.RegisterBiomeHooks(activeRead, IsEnabled)
+        internal.RegisterBiomeHooks(host, store)
     end
     if internal.RegisterNPCHooks then
-        internal.RegisterNPCHooks(activeRead, IsEnabled)
+        internal.RegisterNPCHooks(host, store)
     end
     if internal.RegisterDreamHooks then
-        internal.RegisterDreamHooks(activeRead, IsEnabled)
+        internal.RegisterDreamHooks(host, store)
     end
 end
