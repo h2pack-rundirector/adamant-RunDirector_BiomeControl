@@ -1,5 +1,3 @@
--- luacheck: globals MODULE_ANCHOR
-
 public = {}
 _PLUGIN = { guid = "test-biome-control" }
 
@@ -46,6 +44,7 @@ rom.mods["SGG_Modding-Chalk"] = {
 }
 
 local registeredWraps = {}
+local harnessResetCounter = 0
 
 modutil = {
     once_loaded = {
@@ -182,11 +181,11 @@ end
 
 function ResetBiomeControlHarness(opts)
     opts = opts or {}
+    harnessResetCounter = harnessResetCounter + 1
+    local pluginGuid = opts.pluginGuid or ("adamant-RunDirector_BiomeControl:test:" .. tostring(harnessResetCounter))
     registeredWraps = {}
     installBaseGlobals(opts)
     lib.integrations.unregisterProvider("TestGodPool")
-
-    MODULE_ANCHOR = {}
 
     local data = dofile("src/mods/data.lua")
     local hashGroups = import("mods/hash_groups.lua").bind(data)
@@ -196,8 +195,7 @@ function ResetBiomeControlHarness(opts)
     applyOverrides(config, opts.config)
 
     local host, store = lib.createModule({
-        owner = MODULE_ANCHOR,
-        pluginGuid = "adamant-RunDirector_BiomeControl",
+        pluginGuid = pluginGuid,
         config = config,
         definition = {
             modpack = "run-director",
@@ -227,10 +225,9 @@ function ResetBiomeControlHarness(opts)
         })
     end
 
-    local liveHost = lib.getLiveModuleHost("adamant-RunDirector_BiomeControl")
+    local liveHost = lib.getLiveModuleHost(pluginGuid)
 
     return {
-        moduleAnchor = MODULE_ANCHOR,
         data = data,
         logic = logic,
         config = config,

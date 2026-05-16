@@ -89,4 +89,6 @@ function TestEntrypoint:testMainLuaBootsRealModule()
     lu.assertNotNil(boot.host)
     lu.assertEquals(boot.host.getIdentity().id, "BiomeControl")
     lu.assertEquals(boot.host.getIdentity().modpack, "run-director")
+    lu.assertEquals(#boot.callbacks.imgui, 1)
+    lu.assertEquals(#boot.callbacks.menuBar, 2)
 end
