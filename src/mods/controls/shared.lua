@@ -27,14 +27,6 @@ function shared.cloneMap(values)
     return copy
 end
 
-function shared.buildIntegerValues(minValue, maxValue)
-    local values = {}
-    for value = minValue, maxValue do
-        values[#values + 1] = value
-    end
-    return values
-end
-
 function shared.drawOpts(instance)
     local target = instance.drawOpts
     if not target then

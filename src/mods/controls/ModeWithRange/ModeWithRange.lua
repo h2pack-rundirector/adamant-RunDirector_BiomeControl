@@ -1,7 +1,6 @@
 local deps = ...
 
 local base = deps.base
-local shared = deps.shared
 
 local ModeWithRange = {}
 
@@ -15,10 +14,12 @@ function ModeWithRange.prepare(instance)
     instance.range.visibleWhen = instance.range.visibleWhen or {
         forced = true,
     }
-    instance.range.values = shared.buildIntegerValues(instance.range.min, instance.range.max)
     instance.range.opts = {
         label = "",
-        values = instance.range.values,
+        valueRange = {
+            min = instance.range.min,
+            max = instance.range.max,
+        },
         controlWidth = instance.range.controlWidth or 60,
     }
     return instance

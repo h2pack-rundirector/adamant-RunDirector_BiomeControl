@@ -16,7 +16,10 @@ function settings.build()
         controlDefs.choice("NPCSpacing", {
             label = "NPC Spacing",
             type = "int",
-            values = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 },
+            valueRange = {
+                min = 1,
+                max = 12,
+            },
             default = 6,
             min = 1,
             max = 12,

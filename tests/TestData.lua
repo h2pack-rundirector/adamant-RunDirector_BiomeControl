@@ -73,6 +73,11 @@ function TestBiomeControlData:testBaseAndBiomeControlsShareOneDeclarationSurface
     lu.assertEquals(controls.OnlyAllowForcedEncounters.template, "Flag")
     lu.assertEquals(controls.IgnoreMaxDepth.template, "Flag")
     lu.assertEquals(controls.NPCSpacing.template, "Choice")
+    lu.assertNil(controls.NPCSpacing.values)
+    lu.assertEquals(controls.NPCSpacing.valueRange, {
+        min = 1,
+        max = 12,
+    })
     lu.assertEquals(controls.DreamRoute.template, "DreamRoute")
     lu.assertEquals(controls.PriorityBiome1.template, "GodChoice")
     lu.assertEquals(controls.PriorityTrial1.template, "GodChoice")

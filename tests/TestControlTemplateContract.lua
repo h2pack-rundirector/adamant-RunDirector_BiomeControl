@@ -139,6 +139,32 @@ function TestControlTemplateContract.testChoiceDrawDoesNotMutateCallerOpts()
     lu.assertEquals(draw.calls[2].label, "Second")
 end
 
+function TestControlTemplateContract.testChoiceDrawSupportsValueRange()
+    local shared = assert(loadfile("src/mods/controls/shared.lua"))()
+    local choice = assert(loadfile("src/mods/controls/Choice/Choice.lua"))({
+        shared = shared,
+    })
+    local ranged = choice.prepare({
+        label = "Ranged",
+        type = "int",
+        valueRange = {
+            min = 1,
+            max = 3,
+        },
+    })
+    local opts = sharedOpts()
+    local draw = makeDraw()
+
+    choice.draw(draw, makeSingleFieldControl("Value"), ranged, opts)
+
+    assertCallerOptsUntouched(opts)
+    lu.assertNil(draw.calls[1].values)
+    lu.assertEquals(draw.calls[1].valueRange, {
+        min = 1,
+        max = 3,
+    })
+end
+
 function TestControlTemplateContract.testFlagDrawDoesNotMutateCallerOpts()
     local shared = assert(loadfile("src/mods/controls/shared.lua"))()
     local flag = assert(loadfile("src/mods/controls/Flag/Flag.lua"))({

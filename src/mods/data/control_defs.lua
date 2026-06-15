@@ -106,6 +106,7 @@ function controlDefs.choice(name, opts)
         helpText = opts.helpText,
         type = opts.type or opts.storageType,
         values = opts.values,
+        valueRange = opts.valueRange,
         displayValues = opts.displayValues,
         valueColors = opts.valueColors,
         default = opts.default,

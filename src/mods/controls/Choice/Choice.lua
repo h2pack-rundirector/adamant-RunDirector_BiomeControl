@@ -6,11 +6,21 @@ local Choice = {}
 
 function Choice.prepare(instance)
     instance.values = shared.cloneList(instance.values)
+    if #instance.values == 0 then
+        instance.values = nil
+    end
+    instance.valueRange = shared.cloneMap(instance.valueRange)
+    if next(instance.valueRange) == nil then
+        instance.valueRange = nil
+    end
     instance.displayValues = shared.cloneMap(instance.displayValues)
     instance.valueColors = shared.cloneMap(instance.valueColors)
     instance.storageType = instance.type or instance.storageType or "string"
     if instance.default == nil then
-        instance.default = instance.values[1]
+        instance.default = instance.values and instance.values[1]
+    end
+    if instance.default == nil and instance.valueRange ~= nil then
+        instance.default = instance.valueRange.min
     end
     if instance.default == nil then
         instance.default = instance.storageType == "int" and 0 or ""
@@ -63,6 +73,7 @@ function Choice.draw(draw, control, instance, opts)
     local target = shared.drawOpts(instance)
     shared.applyCommonDrawOpts(target, opts, instance)
     target.values = instance.values
+    target.valueRange = instance.valueRange
     target.displayValues = instance.displayValues
     target.valueColors = instance.valueColors
     draw.widgets.dropdown(control:field(), target)
